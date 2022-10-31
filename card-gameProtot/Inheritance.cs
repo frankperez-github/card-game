@@ -4,7 +4,7 @@
     //ActiveDuration: Cuanto tiempo dura el efecto
     public class Condition
     {
-        public bool condition = false;
+        public bool condition;
 
         public Condition()
         {
@@ -87,14 +87,18 @@
     public class Relics : Cards
     {
         public int id;
+        public Player Owner;
+        public Player Enemy;
         public Dictionary<int, ActionInfo> EffectsOrder = new Dictionary<int, ActionInfo>();
-        Condition Condition;
+        public Condition Condition;
         public bool isTrap;
-        CardState cardState;
+        public CardState cardState;
 
-        public Relics(int id, string Name, int passiveDuration, int activeDuration, string imgAddress, bool isTrap, Condition condition, Dictionary<int, ActionInfo> EffectsOrder) 
+        public Relics(Player Owner, Player Enemy, int id, string Name, int passiveDuration, int activeDuration, string imgAddress, bool isTrap, Condition condition, Dictionary<int, ActionInfo> EffectsOrder) 
                       : base (Name, passiveDuration, activeDuration, imgAddress)
         {
+            this.Owner = Owner;
+            this.Enemy = Enemy;
             this.id = id;
             this.EffectsOrder = EffectsOrder;
             this.Condition = condition;
@@ -103,7 +107,7 @@
         }
 
 
-        public void Effect(int turn, Player Owner, Player Enemy)
+        public void Effect(int turn)
         {
             if (Condition.condition)
             {
@@ -111,34 +115,39 @@
                 {
                     switch (Effect.Key)
                     {
+
                         case 1:
-                            TakeFromDeck(Owner, Effect.Value.affects, Effect.Value.affectedIds);
+                            TakeFromDeck(this.Owner, this.Enemy, Effect.Value.relativePlayer, Effect.Value.affects, Effect.Value.affectedIds);
                             break;
 
                         case 2:
-                            TakeFromEnemyHand(Owner, Effect.Value.player, Effect.Value.affects);
+                            TakeFromEnemyHand(this.Owner, this.Enemy, Effect.Value.relativePlayer, Effect.Value.affects);
                             break;
 
                         case 3:
-                            TakeFromGraveyard(Owner, Effect.Value.affects, Effect.Value.affectedIds);
+                            TakeFromGraveyard(this.Owner, this.Enemy, Effect.Value.relativePlayer, Effect.Value.affects, Effect.Value.affectedIds);
                             break;
 
                         case 4:
-                            Life(Effect.Value.player, Effect.Value.affects, Effect.Value.factor);
+                            Life(this.Owner, this.Enemy, Effect.Value.relativePlayer, Effect.Value.affects, Effect.Value.factor);
                             break;
 
                         case 5:
-                            Defense(Effect.Value.player, Effect.Value.affects, Effect.Value.factor);
+                            Attack(this.Owner, this.Enemy, Effect.Value.relativePlayer, Effect.Value.affects,  Effect.Value.factor);
+                            break;
+
+                        case 6:
+                            Defense(this.Owner, this.Enemy, Effect.Value.relativePlayer, Effect.Value.affects, Effect.Value.factor);
                             break;
                         
-                        case 6:
-                            Discard(Effect.Value.player, Effect.Value.affects, Effect.Value.factor, Effect.Value.affectedIds);
-                            break;
-
                         case 7:
-                            ChangeState(Effect.Value.player, Effect.Value.state);
+                            Discard(this.Owner, this.Enemy, Effect.Value.relativePlayer, Effect.Value.affects, Effect.Value.factor, Effect.Value.affectedIds);
                             break;
 
+
+                        case 8:
+                            ChangeState(this.Owner, this.Enemy, Effect.Value.relativePlayer, Effect.Value.state);
+                            break;
                     }
                 }
             }
@@ -146,18 +155,18 @@
     }
     public class Character : Cards
     {
-        public int attack;
+        public double attack;
         public double defense;
 
         /// <returns>Construye un personaje</returns>
-        public Character(string name, int passiveDuration, int activeDuration, string imgAddress, int attack, double defense) : base(name, passiveDuration, activeDuration, imgAddress)
+        public Character(string name, int passiveDuration, int activeDuration, string imgAddress, double attack, double defense) : base(name, passiveDuration, activeDuration, imgAddress)
         {
             this.attack = attack;
             this.defense = defense;
         }
 
 
-        public static void SpecialAttack(Player player, int attack, int defense, int life, State state)
+        public static void SpecialAttack(Player player, double attack, int defense, int life, State state)
         {
             player.attack += attack;
             player.defense += defense;
@@ -167,6 +176,7 @@
     }
     public class Player : Character 
     {
+        Player Enemy;
         public string nick = "";
         public double life;
         public List<Relics> hand = new List<Relics>();
@@ -182,7 +192,7 @@
         {
             foreach (var card in hand)
             {
-                Console.Write(" " + card.id);            
+                Console.WriteLine("Id: "+ card.id + " Name: "+ card.name);            
             }
         }
     }
@@ -190,74 +200,141 @@
     #region auxiliar classes
     public class FullList
     {
-        public List<int> affectedIds = new List<int>();
-        public FullList(List<int> Place, bool isTrap)
+        public List<Relics> affectedIds = new List<Relics>();
+        public FullList(List<Relics> Place, bool isTrap)
         {
             foreach (var card in Place)
             {
                 if(isTrap)
                 {
-                    if (Program.CardsInventary[card].isTrap)
+                    if (Program.CardsInventary[card.id].isTrap)
                     {
                         this.affectedIds.Add(card);
                     }
                 }
                 if (!isTrap)
                 {
-                    if (!Program.CardsInventary[card].isTrap)
+                    if (!Program.CardsInventary[card.id].isTrap)
                     {
                         this.affectedIds.Add(card);
                     }
                 }
-                
             }
         }
 
-        public FullList(List<int> Place, Dictionary<int, ActionInfo> EffectsOrder, int ActionId, Player player, string condicion)
+        public FullList(List<Relics> Place, Dictionary<int, ActionInfo> EffectsOrder, int ActionId, Player affectedPlayer, string condicion)
         {
-            char operater = condicion[0];
+            char oper = condicion[0];
             string conditionClean = condicion.Remove(0,1);
-            if(operater=='+')
+            if(oper == '+')
             {
                 foreach (var card in Place)
                 {
-                    if(Program.CardsInventary[card].EffectsOrder[ActionId].player==player && 
-                    Program.CardsInventary[card].EffectsOrder[ActionId].affects>=int.Parse(condicion))
+
+                    if (card.EffectsOrder[ActionId].relativePlayer == relativePlayer.Owner)
                     {
-                        this.affectedIds.Add(card);
+                            if (card.Owner == affectedPlayer && 
+                                card.EffectsOrder[ActionId].affects >= int.Parse(conditionClean))
+                            {
+                                this.affectedIds.Add(card);
+                            }
+                    }
+                    else
+                    {
+                        Player Enemy;
+                        foreach (var player in Game.PlayersInventary)
+                        {
+                            if (player != card.Owner)
+                            {
+                                Enemy = player;
+
+                                if (Enemy == affectedPlayer && 
+                                card.EffectsOrder[ActionId].affects >= int.Parse(conditionClean))
+                                {
+                                    this.affectedIds.Add(card);
+                                }
+                                break;
+                            }
+                        }
+                        
                     }
                 }
             }
-            if(operater=='-')
+            if(oper == '-')
             {
                 foreach (var card in Place)
                 {
-                    if(Program.CardsInventary[card].EffectsOrder[ActionId].player==player && 
-                    Program.CardsInventary[card].EffectsOrder[ActionId].affects<=int.Parse(condicion))
+
+                    if (card.EffectsOrder[ActionId].relativePlayer == relativePlayer.Owner)
                     {
-                        this.affectedIds.Add(card);
+                            if (card.Owner == affectedPlayer && 
+                                card.EffectsOrder[ActionId].affects <= int.Parse(conditionClean))
+                            {
+                                this.affectedIds.Add(card);
+                            }
+                    }
+                    else
+                    {
+                        Player Enemy;
+                        foreach (var player in Game.PlayersInventary)
+                        {
+                            if (player != card.Owner)
+                            {
+                                Enemy = player;
+
+                                if (Enemy == affectedPlayer && 
+                                card.EffectsOrder[ActionId].affects <= int.Parse(conditionClean))
+                                {
+                                    this.affectedIds.Add(card);
+                                }
+                                break;
+                            }
+                        }
+                        
                     }
                 }
             }
-            if(operater=='=')
+            if(oper == '=')
             {
                 foreach (var card in Place)
                 {
-                    if(Program.CardsInventary[card].EffectsOrder[ActionId].player==player && 
-                    Program.CardsInventary[card].EffectsOrder[ActionId].affects==int.Parse(condicion))
+
+                    if (card.EffectsOrder[ActionId].relativePlayer == relativePlayer.Owner)
                     {
-                        this.affectedIds.Add(card);
+                            if (card.Owner == affectedPlayer && 
+                                card.EffectsOrder[ActionId].affects == int.Parse(conditionClean))
+                            {
+                                this.affectedIds.Add(card);
+                            }
+                    }
+                    else
+                    {
+                        Player Enemy;
+                        foreach (var player in Game.PlayersInventary)
+                        {
+                            if (player != card.Owner)
+                            {
+                                Enemy = player;
+
+                                if (Enemy == affectedPlayer && 
+                                card.EffectsOrder[ActionId].affects == int.Parse(conditionClean))
+                                {
+                                    this.affectedIds.Add(card);
+                                }
+                                break;
+                            }
+                        }
+                        
                     }
                 }
             }
-            
         }
     }
     public class ActionInfo
     {
-        public Player player;
+        public relativePlayer relativePlayer;
         public State state;
-        public double factor;
+        public double factor = 1;
         public int affects;
         public List<int> affectedIds;
 
@@ -267,31 +344,31 @@
             this.affectedIds = affectedIds;
         }
 
-        public ActionInfo(Player player, int affects, List<int> affectedIds)
+        public ActionInfo(relativePlayer relativePlayer, int affects, List<int> affectedIds)
         {
-            this.player = player;
+            this.relativePlayer = relativePlayer;
             this.affects = affects;
             this.affectedIds = affectedIds;
         }
 
-        public ActionInfo(Player player, int affects, double factor)
+        public ActionInfo(relativePlayer relativePlayer, int affects, double factor)
         {
-            this.player = player;
+            this.relativePlayer = relativePlayer;
             this.affects = affects;
             this.factor = factor;
         }
 
-        public ActionInfo(Player player, int affects, List<int> affectedIds, double factor)
+        public ActionInfo(relativePlayer relativePlayer, int affects, List<int> affectedIds, double factor)
         {
-            this.player = player;
+            this.relativePlayer = relativePlayer;
             this.affects = affects;
             this.affectedIds = affectedIds;
             this.factor = factor;
         }
 
-        public ActionInfo(Player player, State state)
+        public ActionInfo(relativePlayer relativePlayer, State state)
         {
-            this.player = player;
+            this.relativePlayer = relativePlayer;
             this.state = state;
         }
     }
@@ -308,6 +385,12 @@
         Poisoned,
         Freezed,
         Asleep,
+    }
+
+    public enum relativePlayer
+    {
+        Owner,
+        Enemy
     }
     
     #endregion

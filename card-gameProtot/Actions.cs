@@ -3,15 +3,11 @@ namespace card_gameProtot
     // Action extends Condition because we need Cards to extend Condition
     public class Actions : Condition
     {
-        List<int>Ids = new List<int>()
+        public void TakeFromDeck(Player Owner, Player Enemy, relativePlayer relativePlayer, int cards, List<int>Ids)
         {
-            3,
-            4,
-            5,
-            6
-        };
-        public void TakeFromDeck(Player Owner, int cards, List<int>Ids)
-        {
+            Player player = SetPlayer(Owner, Enemy, relativePlayer);
+            Player enemy = SetEnemy(player);
+
             if (Ids.Count() == 0)
             {
                 for (int i = 0; i < cards; i++)
@@ -19,19 +15,26 @@ namespace card_gameProtot
                     Random rnd = new Random();
                     int random = rnd.Next(1, Program.CardsInventary.Count());
                     //Console.WriteLine(random);
-                    Owner.hand.Add(Program.CardsInventary[random]);
+                    Relics relic = Program.CardsInventary[random];
+                    player.hand.Add( new Relics(player, enemy, relic.id, relic.name, relic.passiveDuration, relic.activeDuration, 
+                                    relic.imgAddress,relic.isTrap, relic.Condition, relic.EffectsOrder));
                 }
             }
             else
             {
                 foreach (var card in Ids)
                 {
-                    Owner.hand.Add(Program.CardsInventary[card]);
+                    Relics relic = Program.CardsInventary[card];
+                    player.hand.Add( new Relics(player, enemy, relic.id, relic.name, relic.passiveDuration, relic.activeDuration, 
+                                    relic.imgAddress,relic.isTrap, relic.Condition, relic.EffectsOrder));
                 }
             }
         }
-        public void TakeFromEnemyHand(Player Owner, Player player, int cards)
+        public void TakeFromEnemyHand(Player Owner, Player Enemy,relativePlayer relativePlayer, int cards)
         {
+            Player player = SetPlayer(Owner, Enemy, relativePlayer);
+            Player enemy = SetEnemy(player);
+
             for (int i = 0; i < cards; i++)
             {
                 if (player.hand.Count() != 0)
@@ -40,21 +43,28 @@ namespace card_gameProtot
                     int random = rnd.Next(0, player.hand.Count()-1);
                     int cardId = player.hand[random].id;
                     player.hand.RemoveAt(random);
-                    Owner.hand.Add(Program.CardsInventary[cardId]);
+                    Relics relic = Program.CardsInventary[random];
+                    enemy.hand.Add( new Relics(player, enemy, relic.id, relic.name, relic.passiveDuration, relic.activeDuration, 
+                                    relic.imgAddress,relic.isTrap, relic.Condition, relic.EffectsOrder));
                 }
             }
         }
-        public void TakeFromGraveyard(Player Owner, int cards, List<int>Ids)
+        public void TakeFromGraveyard(Player Owner, Player Enemy, relativePlayer relativePlayer, int cards, List<int>Ids)
         {
+            Player player = SetPlayer(Owner, Enemy, relativePlayer);
+            Player enemy = SetEnemy(player);
+
             if (Ids.Count() == 0)
             {
                 for (int i = 0; i < cards; i++)
                 {
                     try{
                         Random rnd = new Random();
-                        int randomPosition = rnd.Next(0, Program.GraveYard.Count()-1);
-                        Owner.hand.Add(Program.CardsInventary[Program.GraveYard[randomPosition]]);
-                        Program.GraveYard.RemoveAt(randomPosition);
+                        int random = rnd.Next(0, Program.GraveYard.Count()-1);
+                        Relics relic = Program.CardsInventary[random];
+                        player.hand.Add( new Relics(player, enemy, relic.id, relic.name, relic.passiveDuration, relic.activeDuration, 
+                                        relic.imgAddress,relic.isTrap, relic.Condition, relic.EffectsOrder));
+                        Program.GraveYard.RemoveAt(random);
                     }
                     catch(System.Exception)
                     {
@@ -67,8 +77,10 @@ namespace card_gameProtot
                 foreach (var card in Ids)
                 {
                     try{
-                    Owner.hand.Add(Program.CardsInventary[Program.GraveYard[card]]);
-                    Program.GraveYard.RemoveAt(card);
+                        Relics relic = Program.CardsInventary[card];
+                        player.hand.Add( new Relics(player, enemy, relic.id, relic.name, relic.passiveDuration, relic.activeDuration, 
+                                        relic.imgAddress,relic.isTrap, relic.Condition, relic.EffectsOrder));
+                        Program.GraveYard.RemoveAt(card);
                     }
                     catch(System.Exception)
                     {
@@ -78,16 +90,25 @@ namespace card_gameProtot
             }
             
         }
-        public void Life(Player player, int affects, double factor)
+        public void Life(Player Owner, Player Enemy, relativePlayer relativePlayer, int affects, double factor)
         {
+            Player player = SetPlayer(Owner, Enemy, relativePlayer);
             player.life += affects * factor;
-        }    
-        public void Defense(Player player, int defense, double factor)
+            Console.WriteLine(affects);
+        }   
+        public void Attack(Player Owner, Player Enemy, relativePlayer relativePlayer, int affects, double factor)
         {
+            Player player = SetPlayer(Owner, Enemy, relativePlayer);
+            player.attack += affects * factor;
+        }    
+        public void Defense(Player Owner, Player Enemy, relativePlayer relativePlayer, int defense, double factor)
+        {
+            Player player = SetPlayer(Owner, Enemy, relativePlayer);
             player.defense += defense*factor;
         }
-        public void Discard(Player player, int affects, double factor, List<int>Ids)
+        public void Discard(Player Owner, Player Enemy, relativePlayer relativePlayer, int affects, double factor, List<int>Ids)
         {
+            Player player = SetPlayer(Owner, Enemy, relativePlayer);
             if (Ids.Count() == 0)
             {
                 for (int i = 0; i < affects*factor; i++)
@@ -115,9 +136,37 @@ namespace card_gameProtot
                 }
             }
         }
-        public void ChangeState(Player player, State state)
+        public void ChangeState(Player Owner, Player Enemy, relativePlayer relativePlayer, State state)
         {
+            Player player = SetPlayer(Owner, Enemy, relativePlayer);
             player.state = state;
+        }
+        public static Player SetPlayer(Player Owner, Player Enemy, relativePlayer relativePlayer)
+        {
+            Player player;
+            if (relativePlayer == relativePlayer.Owner)
+            {
+                player = Owner;
+            }
+            else
+            {
+                player = Enemy;
+            }
+            return player;
+        }
+        public static Player SetEnemy(Player Owner)
+        {
+            Player Enemy;
+
+            foreach (var player in Game.PlayersInventary)
+            {
+                if (player != Owner)
+                {
+                    Enemy = player;
+                    return Enemy;
+                }
+            }
+            throw(new Exception("Error in Actions.SetEnemy()"));
         }
     }
 }
