@@ -14,9 +14,9 @@ namespace card_gameProtot
                 {
                     Random rnd = new Random();
                     int random = rnd.Next(1, Program.CardsInventary.Count());
-                    //Console.WriteLine(random);
                     Relics relic = Program.CardsInventary[random];
-                    player.hand.Add( new Relics(player, enemy, relic.id, relic.name, relic.passiveDuration, relic.activeDuration, 
+                    
+                    player.hand.Add( new Relics(relic.Owner, enemy, relic.id, relic.name, relic.passiveDuration, relic.activeDuration, 
                                     relic.imgAddress,relic.isTrap, relic.Condition, relic.EffectsOrder));
                 }
             }
@@ -94,7 +94,7 @@ namespace card_gameProtot
         {
             Player player = SetPlayer(Owner, Enemy, relativePlayer);
             player.life += affects * factor;
-            Console.WriteLine(affects);
+            Console.WriteLine(factor);
         }   
         public void Attack(Player Owner, Player Enemy, relativePlayer relativePlayer, int affects, double factor)
         {

@@ -129,19 +129,19 @@
                             break;
 
                         case 4:
-                            Life(this.Owner, this.Enemy, Effect.Value.relativePlayer, Effect.Value.affects, Effect.Value.factor);
+                            Life(this.Owner, this.Enemy, Effect.Value.relativePlayer, Effect.Value.affects, Effect.Value.factor[0]);
                             break;
 
                         case 5:
-                            Attack(this.Owner, this.Enemy, Effect.Value.relativePlayer, Effect.Value.affects,  Effect.Value.factor);
+                            Attack(this.Owner, this.Enemy, Effect.Value.relativePlayer, Effect.Value.affects,  Effect.Value.factor[0]);
                             break;
 
                         case 6:
-                            Defense(this.Owner, this.Enemy, Effect.Value.relativePlayer, Effect.Value.affects, Effect.Value.factor);
+                            Defense(this.Owner, this.Enemy, Effect.Value.relativePlayer, Effect.Value.affects, Effect.Value.factor[0]);
                             break;
                         
                         case 7:
-                            Discard(this.Owner, this.Enemy, Effect.Value.relativePlayer, Effect.Value.affects, Effect.Value.factor, Effect.Value.affectedIds);
+                            Discard(this.Owner, this.Enemy, Effect.Value.relativePlayer, Effect.Value.affects, Effect.Value.factor[0], Effect.Value.affectedIds);
                             break;
 
 
@@ -334,7 +334,7 @@
     {
         public relativePlayer relativePlayer;
         public State state;
-        public double factor = 1;
+        public double[] factor = new double[1]{1};
         public int affects;
         public List<int> affectedIds;
 
@@ -351,14 +351,14 @@
             this.affectedIds = affectedIds;
         }
 
-        public ActionInfo(relativePlayer relativePlayer, int affects, double factor)
+        public ActionInfo(relativePlayer relativePlayer, int affects, double[] factor)
         {
             this.relativePlayer = relativePlayer;
             this.affects = affects;
             this.factor = factor;
         }
 
-        public ActionInfo(relativePlayer relativePlayer, int affects, List<int> affectedIds, double factor)
+        public ActionInfo(relativePlayer relativePlayer, int affects, List<int> affectedIds, double[] factor)
         {
             this.relativePlayer = relativePlayer;
             this.affects = affects;

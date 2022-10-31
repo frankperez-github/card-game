@@ -5,7 +5,7 @@ namespace card_gameProtot
         public static Dictionary<int, Relics> CardsInventary= new Dictionary<int, Relics>();
         public static Dictionary<int, Character> CharactersInventary = new Dictionary<int, Character>();
         public static List<int> GraveYard = new List<int>();
-            
+
         public static void Main(string[] args)
         {
             //Characters
@@ -18,7 +18,7 @@ namespace card_gameProtot
 
 
             Player defaultPlayer = new Player(CharactersInventary[1], "pepito");
-
+            
             //Espada del Destino
             //Te suma 15 de ataque
             Dictionary<int, ActionInfo> card1Dict = new Dictionary<int, ActionInfo>();
@@ -35,16 +35,18 @@ namespace card_gameProtot
 
             //Anillo de Zeus
             //Ganas 5 de vida por cada carta en tu mano
+            Player defaultPlayer1 = new Player(CharactersInventary[1], "pepito");
             Dictionary<int, ActionInfo> card3Dict = new Dictionary<int, ActionInfo>();
-            ActionInfo card3Info = new ActionInfo(relativePlayer.Owner, 5, defaultPlayer.hand.Count());
+            ActionInfo card3Info = new ActionInfo(relativePlayer.Owner, 5, new double[1]{1});
             card3Dict.Add(4, card3Info);
-            CardsInventary.Add(3 ,new Relics(defaultPlayer, defaultPlayer, 3, "Anillo de Zeus", 1, 1, "imgpath3", false,  new Condition(), card3Dict));
+            CardsInventary.Add(3 ,new Relics(defaultPlayer1, defaultPlayer, 3, "Anillo de Zeus", 1, 1, "imgpath3", false,  new Condition(), card3Dict));
+            CardsInventary[3].EffectsOrder[4].factor[0] = CardsInventary[3].Owner.hand.Count();
 
             //Escudo de la pobreza
             //Trap, evita el 50% del dano del enemigo
             Dictionary<int, ActionInfo> card4Dict = new Dictionary<int, ActionInfo>();
-            ActionInfo card4Info = new ActionInfo(relativePlayer.Owner, 1, 0.5);
-            card4Dict.Add(4, card4Info);
+            ActionInfo card4Info = new ActionInfo(relativePlayer.Owner, 1, new double[1]{0.5});
+            card4Dict.Add(6, card4Info);
             CardsInventary.Add(4,new Relics(defaultPlayer, defaultPlayer, 4, "Escudo de la pobreza", 1, 1, "imgpath", true, new Condition(), card4Dict));
 
             //Libro de los secretos 

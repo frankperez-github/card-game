@@ -16,7 +16,7 @@ namespace card_gameProtot
 
 
 
-            Player player1 = new Player(character1, "pepito");
+            Player player1 = new Player(character1, "loquito");
             Player player2 = new Player(character2, "juancito");
             PlayersInventary.Add(player1);
             PlayersInventary.Add(player2);
@@ -34,7 +34,7 @@ namespace card_gameProtot
                 if (turn % 2 != 0) //Impar
                 {
                     player1.TakeFromDeck(player1, player2, relativePlayer.Owner, 1, new List<int>());
-                    Relics relic = Program.CardsInventary[3];
+                    Relics relic = Program.CardsInventary[1];
                     player1.hand.Add( new Relics(player1, player2, relic.id, relic.name, relic.passiveDuration, relic.activeDuration, 
                                     relic.imgAddress,relic.isTrap, relic.Condition, relic.EffectsOrder));
                     player1.PrintHand();
@@ -42,6 +42,7 @@ namespace card_gameProtot
                     // Console.WriteLine((player1.hand[player1.hand.Count()-1].EffectsOrder.ElementAt(0).Key));
                     
                     Console.ReadKey();
+                    Console.WriteLine(player2.hand.Count());
                     player1.hand[player1.hand.Count()-1].Effect(turn);
                     Console.WriteLine("player1 defense: "+player1.defense);
                     Console.WriteLine("player1 attack: "+player1.attack);
