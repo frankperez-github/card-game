@@ -2,6 +2,7 @@ namespace card_gameProtot
 {
     public class Game
     {
+        public static List<Relics> BattleField = new List<Relics>();
         public static List<Player> PlayersInventary = new List<Player>();
         public static Dictionary<int, Character> CharactersInventary = Program.CharactersInventary;
         public static List<int> GraveYard = new List<int>();
@@ -25,28 +26,63 @@ namespace card_gameProtot
             Dictionary<int, Relics> CardsInventary = Program.CardsInventary;
             List<int> Deck = CargarDeck(CardsInventary);
 
+            Relics relic = Program.CardsInventary[1];
+
+            // Corregido  // Carta agregada de primera, para poder acceder a ella siempre con el mismo indice
+            player1.hand.Add( new Relics(player1, player2, relic.id, relic.name, relic.passiveDuration, relic.activeDuration, 
+                                    relic.imgAddress,relic.isTrap, relic.Condition, relic.EffectsOrder));
+            
+            //Corregido   // Efecto se aplica una vez, no en cada turno
+            player1.hand[0].Effect(turn);
+
+            // Putting activated card in battlefield
+            BattleField.Add(new Relics(player1, player2, relic.id, relic.name, relic.passiveDuration, relic.activeDuration, 
+                            relic.imgAddress,relic.isTrap, relic.Condition, relic.EffectsOrder));
+
 
             player1.TakeFromDeck(player1, player2, relativePlayer.Owner, 5, new List<int>());
             player2.TakeFromDeck(player2, player1, relativePlayer.Owner, 5, new List<int>());
+            
 
             while (player1.life != 0 && player2.life != 0)
             {
                 if (turn % 2 != 0) //Impar
                 {
                     player1.TakeFromDeck(player1, player2, relativePlayer.Owner, 1, new List<int>());
-                    Relics relic = Program.CardsInventary[1];
-                    player1.hand.Add( new Relics(player1, player2, relic.id, relic.name, relic.passiveDuration, relic.activeDuration, 
-                                    relic.imgAddress,relic.isTrap, relic.Condition, relic.EffectsOrder));
-                    player1.PrintHand();
-
-                    // Console.WriteLine((player1.hand[player1.hand.Count()-1].EffectsOrder.ElementAt(0).Key));
                     
-                    Console.ReadKey();
-                    Console.WriteLine(player2.hand.Count());
-                    player1.hand[player1.hand.Count()-1].Effect(turn);
+                    // player1.PrintHand();
+
+                    // Discounting activeDuration on each turn, eliminating card if activeDuration = 0 
+                    int index = 0;
+                    foreach (var card in BattleField)
+                    {
+                        if (card.activeDuration == 0)
+                        {
+                            foreach (var effect in card.EffectsOrder)
+                            {
+                                // El indice no es dinamico con el fin de probar el metodo.
+                                // Debe hacerse dinamico
+                                card.EffectsOrder[5].affects = card.EffectsOrder[5].affects * (-1);
+                                player1.hand[index].Effect(turn);
+                            }
+                            BattleField.RemoveAt(index);
+                            index++;
+                            break;
+                        }
+                        else
+                        {
+                            Console.WriteLine(card.name);
+                            card.activeDuration--;
+                        }
+                    }
+
                     Console.WriteLine("player1 defense: "+player1.defense);
                     Console.WriteLine("player1 attack: "+player1.attack);
                     Console.WriteLine("player1 life: "+player1.life);
+                    if (BattleField.Count() != 0)
+                    {
+                        Console.WriteLine("Last added card will be desactivated in: "+BattleField[0].activeDuration);
+                    }
                     Console.ReadKey();
                 }
 
