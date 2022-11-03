@@ -92,7 +92,7 @@
         public Dictionary<int, ActionInfo> EffectsOrder = new Dictionary<int, ActionInfo>();
         public Condition Condition;
         public bool isTrap;
-        public CardState cardState;
+        public CardState cardState = CardState.OnDeck;
 
         public Relics(Player Owner, Player Enemy, int id, string Name, int passiveDuration, int activeDuration, string imgAddress, bool isTrap, Condition condition, Dictionary<int, ActionInfo> EffectsOrder) 
                       : base (Name, passiveDuration, activeDuration, imgAddress)
@@ -102,51 +102,112 @@
             this.id = id;
             this.EffectsOrder = EffectsOrder;
             this.Condition = condition;
-            this.cardState = CardState.OnDeck;
+            this.cardState = CardState.OnHand;
             this.isTrap = isTrap;
         }
 
+        public static Player SetPlayer(Player Owner, Player Enemy, relativePlayer relativePlayer)
+        {
+            Player player;
+            if (relativePlayer == relativePlayer.Owner)
+            {
+                player = Owner;
+            }
+            else
+            {
+                player = Enemy;
+            }
+            return player;
+        }
+        public static Player SetEnemy(Player Owner)
+        {
+            Player Enemy;
 
-        public void Effect(int turn)
+            foreach (var player in Game.PlayersInventary)
+            {
+                if (player != Owner)
+                {
+                    Enemy = player;
+                    return Enemy;
+                }
+            }
+            throw(new Exception("Error in Actions.SetEnemy()"));
+        }
+    
+        public double setFactor(int effect, Player player, Player enemy)
+        {
+            double factor = 1;
+            switch (this.EffectsOrder[effect].relativeFactor)
+            {
+                case relativeFactor.EnemyHand:
+                    return  this.EffectsOrder[effect].factor * enemy.getCardType(CardState.OnHand);
+
+                case relativeFactor.OwnerHand:
+                    return this.EffectsOrder[effect].factor * player.getCardType(CardState.OnHand);
+
+                case relativeFactor.EnemyBattleField:
+                    return this.EffectsOrder[effect].factor * enemy.getCardType(CardState.Activated);
+
+                case relativeFactor.OwnerBattleField:
+                    return this.EffectsOrder[effect].factor * player.getCardType(CardState.Activated);
+                
+                case relativeFactor.Graveyard:
+                    return this.EffectsOrder[effect].factor * (player.getCardType(CardState.OnGraveyard) + enemy.getCardType(CardState.OnGraveyard));
+                
+                default:
+                    factor = this.EffectsOrder[effect].factor;
+                    break;
+            }
+            return factor;
+        } 
+                
+        public void Effect()
         {
             if (Condition.condition)
             {
                 foreach(var Effect in EffectsOrder)
                 {
+                    
+                    Player player = SetPlayer(this.Owner, this.Enemy, Effect.Value.relativePlayer);
+                    Player enemy = SetEnemy(player);
+                    double actualFactor;
+
                     switch (Effect.Key)
                     {
-
                         case 1:
-                            TakeFromDeck(this.Owner, this.Enemy, Effect.Value.relativePlayer, Effect.Value.affects, Effect.Value.affectedIds);
+                            TakeFromDeck(Owner, Enemy, Effect.Value.affects, Effect.Value.affectedIds);
                             break;
 
                         case 2:
-                            TakeFromEnemyHand(this.Owner, this.Enemy, Effect.Value.relativePlayer, Effect.Value.affects);
+                            TakeFromEnemyHand(Owner, Enemy, Effect.Value.affects);
                             break;
 
                         case 3:
-                            TakeFromGraveyard(this.Owner, this.Enemy, Effect.Value.relativePlayer, Effect.Value.affects, Effect.Value.affectedIds);
+                            TakeFromGraveyard(Owner, Enemy, Effect.Value.affects, Effect.Value.affectedIds);
                             break;
 
                         case 4:
-                            Life(this.Owner, this.Enemy, Effect.Value.relativePlayer, Effect.Value.affects, Effect.Value.factor[0]);
+                            actualFactor = setFactor(Effect.Key, player, enemy);
+                            Life(player, enemy, Effect.Value.affects, actualFactor);
                             break;
 
                         case 5:
-                            Attack(this.Owner, this.Enemy, Effect.Value.relativePlayer, Effect.Value.affects,  Effect.Value.factor[0]);
+                            actualFactor = setFactor(Effect.Key, player, enemy);
+                            Attack(Owner, Enemy, Effect.Value.affects,  actualFactor);
                             break;
 
                         case 6:
-                            Defense(this.Owner, this.Enemy, Effect.Value.relativePlayer, Effect.Value.affects, Effect.Value.factor[0]);
+                            actualFactor = setFactor(Effect.Key, player, enemy);
+                            Defense(Owner, Enemy, Effect.Value.affects, actualFactor);
                             break;
                         
                         case 7:
-                            Discard(this.Owner, this.Enemy, Effect.Value.relativePlayer, Effect.Value.affects, Effect.Value.factor[0], Effect.Value.affectedIds);
+                            actualFactor = setFactor(Effect.Key, player, enemy);
+                            Discard(Owner, Enemy, Effect.Value.affects, actualFactor, Effect.Value.affectedIds);
                             break;
 
-
                         case 8:
-                            ChangeState(this.Owner, this.Enemy, Effect.Value.relativePlayer, Effect.Value.state);
+                            ChangeState(Owner, Enemy, Effect.Value.state);
                             break;
                     }
                 }
@@ -195,15 +256,20 @@
             Console.WriteLine("Attack: " + this.attack);
             Console.WriteLine("Defense: " + this.defense);
             Console.WriteLine("State: " + this.state);
+            this.PrintHand();
             this.PrintBattleField();
             this.PrintGraveYard();
         }
-
         public void PrintHand()
         {
+            Console.WriteLine();
+            Console.WriteLine("Hand: ");
             foreach (var card in hand)
             {
-                Console.WriteLine("Id: "+ card.id + " Name: "+ card.name);            
+                if(card.cardState == CardState.OnHand)
+                {
+                    Console.WriteLine("Id: "+ card.id + " Name: "+ card.name);            
+                }
             }
         }
         public void PrintBattleField()
@@ -238,6 +304,18 @@
             Console.WriteLine();
             Console.WriteLine("Graveyard-"+this.name+": "+quant);
 
+        }
+        public int getCardType(CardState cardState)
+        {
+            int total = 0;
+            foreach (var card in this.hand)
+            {
+                if (card.cardState == cardState)
+                {
+                    total++;
+                }
+            }
+            return total;
         }
     }
 
@@ -378,14 +456,20 @@
     {
         public relativePlayer relativePlayer;
         public State state;
-        public double[] factor = new double[1]{1};
+        public double factor = 1;
         public int affects;
         public List<int> affectedIds;
+        public relativeFactor relativeFactor = relativeFactor.Fixed;
 
         public ActionInfo(int affects, List<int> affectedIds)
         {
             this.affects = affects;
             this.affectedIds = affectedIds;
+        }
+        public ActionInfo(relativePlayer relativePlayer, int affects)
+        {
+            this.relativePlayer = relativePlayer;
+            this.affects = affects;
         }
 
         public ActionInfo(relativePlayer relativePlayer, int affects, List<int> affectedIds)
@@ -395,15 +479,17 @@
             this.affectedIds = affectedIds;
         }
 
-        public ActionInfo(relativePlayer relativePlayer, int affects, double[] factor)
+        public ActionInfo(relativePlayer relativePlayer, int affects, double factor, relativeFactor relativeFactor)
         {
+            this.relativeFactor = relativeFactor;
             this.relativePlayer = relativePlayer;
             this.affects = affects;
             this.factor = factor;
         }
 
-        public ActionInfo(relativePlayer relativePlayer, int affects, List<int> affectedIds, double[] factor)
+        public ActionInfo(relativePlayer relativePlayer, int affects, List<int> affectedIds, double factor, relativeFactor relativeFactor)
         {
+            this.relativeFactor = relativeFactor;
             this.relativePlayer = relativePlayer;
             this.affects = affects;
             this.affectedIds = affectedIds;
@@ -430,7 +516,15 @@
         Freezed,
         Asleep,
     }
-
+    public enum relativeFactor
+    {
+        Fixed,
+        EnemyHand,
+        OwnerHand,
+        EnemyBattleField,
+        OwnerBattleField,
+        Graveyard
+    }
     public enum relativePlayer
     {
         Owner,

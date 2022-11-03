@@ -6,7 +6,7 @@ namespace card_gameProtot
         public static Dictionary<int, Character> CharactersInventary = Program.CharactersInventary;
         public static void game()
         {
-
+            Console.Clear();
             Console.WriteLine("Elige el personaje que seras");
             Character character1 = CharactersInventary[int.Parse(Console.ReadLine())];
             Console.WriteLine("Elige el personaje que sera tu oponente");
@@ -25,20 +25,19 @@ namespace card_gameProtot
             Relics relic = Program.CardsInventary[1];
 
             // Corregido  // Carta agregada de primera, para poder acceder a ella siempre con el mismo indice
-            player1.hand.Add( new Relics(player1, player2, relic.id, relic.name, relic.passiveDuration, relic.activeDuration, 
-                                    relic.imgAddress,relic.isTrap, relic.Condition, relic.EffectsOrder));
+            // player1.hand.Add( new Relics(player1, player2, relic.id, relic.name, relic.passiveDuration, relic.activeDuration, 
+            //                         relic.imgAddress,relic.isTrap, relic.Condition, relic.EffectsOrder));
             
             //Corregido   // Efecto se aplica una vez, no en cada turno
-            player1.hand[0].Effect(turn);
+            //player1.hand[0].Effect();
 
             // Putting activated card in battlefield
-            player1.hand[0].cardState = CardState.Activated;
+            //player1.hand[0].cardState = CardState.Activated;
 
-
-            player1.TakeFromDeck(player1, player2, relativePlayer.Owner, 5, new List<int>());
-            player2.TakeFromDeck(player2, player1, relativePlayer.Owner, 5, new List<int>());
+            player1.TakeFromDeck(player1, player2, 5, new List<int>());
+            player2.TakeFromDeck(player2, player1, 5, new List<int>());
             
-
+            Console.Clear();
             while (player1.life != 0 && player2.life != 0)
             {
                 Console.WriteLine("Turn: "+turn);
@@ -46,15 +45,18 @@ namespace card_gameProtot
 
                 if (turn % 2 != 0) //Impar
                 {
-                    player1.TakeFromDeck(player1, player2, relativePlayer.Owner, 1, new List<int>());
+                    //player1.TakeFromDeck(player1, player2, 1, new List<int>());
                     
                     player1.printInfo();
 
+                    Console.WriteLine("Elige la carta que quieres activar");
+                    ActiveEffect(player1, int.Parse(Console.ReadLine()));
 
+                    UpdateBattleField(player1);
                     //All activity of player 1 goes here 
+                    
 
-
-                    // PRINT LAST CARD ACTIVATED=============================================================================================================================
+                    // PRINTS LAST CARD ACTIVATED=============================================================================================================================
                     // foreach (var card in player1.hand)
                     // {
                     //     if (card.cardState == CardState.Activated)
@@ -65,33 +67,19 @@ namespace card_gameProtot
 
 
                     // Discounting activeDuration on each turn, eliminating card if activeDuration = 0 
-                    for (int index = 0; index < player1.hand.Count(); index++)
-                    {
-                        if (player1.hand[index].cardState == CardState.Activated)
-                        {
-                            if (player1.hand[index].activeDuration == 1)
-                            {
-                                // foreach (var activeEffect in activeCard.Key.EffectsOrder)
-                                // {
-                                //     // Removing effects of card after activeDuration is empty
-                                //     activeCard.Key.EffectsOrder[activeEffect.Key].affects = activeCard.Key.EffectsOrder[activeEffect.Key].affects * (-1);
-                                //     player1.hand[index].Effect(turn);
-                                // }
-                                player1.hand[index].cardState = CardState.OnGraveyard; // Removing card from battelfield
-                            }
-                            else
-                            {
-                                player1.hand[index].activeDuration--;
-                            }
-                        }
-                    }
                     
+
+                    // Undonng effect of cards where activeDuration = 0
+
+
+
                     Console.ReadKey();
+                    Console.Clear();
                 }
 
                 if (turn % 2 == 0) //Par
                 {
-                    player2.TakeFromDeck(player2, player1, relativePlayer.Owner, 1, new List<int>());
+                    player2.TakeFromDeck(player2, player1, 1, new List<int>());
                 }
                 turn++; 
             }
@@ -106,7 +94,58 @@ namespace card_gameProtot
             //Console.WriteLine(string.Join(" ", result));
             return result;
         }
-        
-        
+        public static void UpdateBattleField(Player player)
+        {
+            for (int index = 0; index < player.hand.Count(); index++)
+            {
+                if (player.hand[index].cardState == CardState.Activated)
+                {
+
+                    if (player.hand[index].activeDuration == 1)
+                    {
+                        foreach (var effect in player.hand[index].EffectsOrder)
+                        {
+                            if(effect.Key == 5)
+                            {
+                                effect.Value.affects = effect.Value.affects*(-1); 
+                                player.hand[index].Effect();
+                                effect.Value.affects = effect.Value.affects*(-1);
+                            }
+                        }
+                        player.hand[index].cardState = CardState.OnGraveyard; // Removing card from battelfield
+                    }
+                    else
+                    {
+                        if (player.hand[index].passiveDuration != 0)
+                        {
+                            player.hand[index].passiveDuration--;
+                        }
+                        else
+                        {
+                            int Defaultpassive = Program.CardsInventary[player.hand[index].id].passiveDuration;
+                            player.hand[index].passiveDuration = Defaultpassive;
+                            player.hand[index].activeDuration--;
+                        }
+                    }
+                }
+            }
+        }
+        public static void ActiveEffect(Player player, int HandPossition)
+        {
+            foreach (var card in player.hand)
+            {
+                if(card.cardState==CardState.OnHand)
+                {
+                    if(HandPossition==0)
+                    {
+                        card.Effect();
+                        card.cardState = CardState.Activated;     
+                        break;
+                    }
+                    HandPossition--;
+                }
+            }
+            
+        }
     }
 }
