@@ -188,12 +188,56 @@
             this.life = 100;
         }
 
+        public void printInfo()
+        {
+            Console.WriteLine("Nick: " + this.nick);
+            Console.WriteLine("Life: " + this.life);
+            Console.WriteLine("Attack: " + this.attack);
+            Console.WriteLine("Defense: " + this.defense);
+            Console.WriteLine("State: " + this.state);
+            this.PrintBattleField();
+            this.PrintGraveYard();
+        }
+
         public void PrintHand()
         {
             foreach (var card in hand)
             {
                 Console.WriteLine("Id: "+ card.id + " Name: "+ card.name);            
             }
+        }
+        public void PrintBattleField()
+        {
+            Console.WriteLine();
+            int quant = 0;
+            foreach (var card in this.hand)
+            {
+                if (card.cardState == CardState.Activated)
+                {
+                    quant++;
+                    Console.Write(card.name+", ");
+                }
+            }
+            Console.WriteLine();
+            Console.WriteLine("BatteField-"+this.name+": "+quant);
+            Console.WriteLine();
+
+        }
+        public void PrintGraveYard()
+        {
+            int quant = 0;
+            foreach (var card in this.hand)
+            {
+                if (card.cardState == CardState.OnGraveyard)
+                {
+                    quant++;
+                    Console.Write(card.name+", ");
+                }
+                
+            }
+            Console.WriteLine();
+            Console.WriteLine("Graveyard-"+this.name+": "+quant);
+
         }
     }
 
