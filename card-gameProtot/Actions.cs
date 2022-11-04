@@ -44,19 +44,37 @@ namespace card_gameProtot
                 }
             }
         }
-        public void TakeFromGraveyard(Player Owner, Player Enemy, int cards, List<int>Ids)
+        public void TakeFromGraveyard(Player Owner, Player Enemy, int cards, List<int> Ids)
         {
             if (Ids.Count() == 0)
             {
+                
                 for (int i = 0; i < cards; i++)
                 {
                     try{
                         Random rnd = new Random();
-                        int random = rnd.Next(0, Program.GraveYard.Count()-1);
-                        Relics relic = Program.CardsInventary[random];
-                        Owner.hand.Add( new Relics(Owner, Enemy, relic.id, relic.name, relic.passiveDuration, relic.activeDuration, 
-                                        relic.imgAddress,relic.isTrap, relic.Condition, relic.EffectsOrder));
-                        Program.GraveYard.RemoveAt(random);
+                        int random = rnd.Next(0, Owner.getCardType(CardState.OnGraveyard)+Enemy.getCardType(CardState.OnGraveyard));
+
+                        foreach (var player in Game.PlayersInventary)
+                        {
+                            foreach (var card in player.hand)
+                            {
+                                if(card.cardState == CardState.OnGraveyard)
+                                {
+                                    if(random == 0)
+                                    {
+                                        card.cardState = CardState.OnDeck;
+                                        Relics relic = Program.CardsInventary[card.id];
+                                        Owner.hand.Add( new Relics(Owner, Enemy, relic.id, relic.name, relic.passiveDuration, relic.activeDuration, 
+                                                        relic.imgAddress,relic.isTrap, relic.Condition, relic.EffectsOrder));
+                                        goto Found;
+                                        
+                                    }
+                                    random--;
+                                }
+                            }
+                        }
+                        Found:{}
                     }
                     catch(System.Exception)
                     {

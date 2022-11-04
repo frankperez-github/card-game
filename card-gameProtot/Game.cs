@@ -4,6 +4,8 @@ namespace card_gameProtot
     {
         public static List<Player> PlayersInventary = new List<Player>();
         public static Dictionary<int, Character> CharactersInventary = Program.CharactersInventary;
+        // public static Player player1;
+        // public static Player player2;
         public static void game()
         {
             Console.Clear();
@@ -20,19 +22,8 @@ namespace card_gameProtot
 
             int turn = 1;
             Dictionary<int, Relics> CardsInventary = Program.CardsInventary;
-            List<int> Deck = CargarDeck(CardsInventary);
+            // List<int> Deck = CargarDeck(CardsInventary);
 
-            Relics relic = Program.CardsInventary[1];
-
-            // Corregido  // Carta agregada de primera, para poder acceder a ella siempre con el mismo indice
-            // player1.hand.Add( new Relics(player1, player2, relic.id, relic.name, relic.passiveDuration, relic.activeDuration, 
-            //                         relic.imgAddress,relic.isTrap, relic.Condition, relic.EffectsOrder));
-            
-            //Corregido   // Efecto se aplica una vez, no en cada turno
-            //player1.hand[0].Effect();
-
-            // Putting activated card in battlefield
-            //player1.hand[0].cardState = CardState.Activated;
 
             player1.TakeFromDeck(player1, player2, 5, new List<int>());
             player2.TakeFromDeck(player2, player1, 5, new List<int>());
@@ -45,41 +36,67 @@ namespace card_gameProtot
 
                 if (turn % 2 != 0) //Impar
                 {
-                    //player1.TakeFromDeck(player1, player2, 1, new List<int>());
+                    player1.TakeFromDeck(player1, player2, 1, new List<int>());                    
                     
-                    player1.printInfo();
-
-                    Console.WriteLine("Elige la carta que quieres activar");
-                    ActiveEffect(player1, int.Parse(Console.ReadLine()));
-
-                    UpdateBattleField(player1);
                     //All activity of player 1 goes here 
-                    
-
-                    // PRINTS LAST CARD ACTIVATED=============================================================================================================================
-                    // foreach (var card in player1.hand)
-                    // {
-                    //     if (card.cardState == CardState.Activated)
-                    //     {
-                    //         Console.WriteLine("Last added card will be desactivated in: "+card.activeDuration);
-                    //     }
-                    // }
-
-
-                    // Discounting activeDuration on each turn, eliminating card if activeDuration = 0 
-                    
-
-                    // Undonng effect of cards where activeDuration = 0
-
-
-
-                    Console.ReadKey();
+                    int Option = 0;
+                    while(Option != 3)
+                    {
+                        Console.Clear();
+                        player1.printInfo();
+                        Console.WriteLine("Presione 1: Para activar cartas");
+                        Console.WriteLine("Presione 2: Para atacar");
+                        Console.WriteLine("Presione 3: Para Pasar turno");
+                        try
+                        {
+                            Option = int.Parse(Console.ReadLine());
+                        }
+                        catch (System.Exception){}
+                        switch (Option)
+                        {
+                            case 1: ActiveCards(player1);
+                            break;
+                            case 2: Attack(player1, player2);
+                            break;
+                            default:
+                            break;
+                        }
+                    }
+                    UpdateBattleField(player1);
                     Console.Clear();
                 }
 
                 if (turn % 2 == 0) //Par
                 {
                     player2.TakeFromDeck(player2, player1, 1, new List<int>());
+                    player2.printInfo();
+
+                    //All activity of player 2 goes here 
+                    int Option = 0;
+                    while(Option != 3)
+                    {
+                        Console.Clear();
+                        player2.printInfo();
+                        Console.WriteLine("Presione 1: Para activar cartas");
+                        Console.WriteLine("Presione 2: Para atacar");
+                        Console.WriteLine("Presione 3: Para Pasar turno");
+                        try
+                        {
+                            Option = int.Parse(Console.ReadLine());
+                        }
+                        catch (System.Exception){}
+                        switch (Option)
+                        {
+                            case 1: ActiveCards(player2);
+                            break;
+                            case 2: Attack(player2, player1);
+                            break;
+                            default:
+                            break;
+                        }
+                    }
+                    UpdateBattleField(player2);
+                    Console.Clear();
                 }
                 turn++; 
             }
@@ -130,8 +147,20 @@ namespace card_gameProtot
                 }
             }
         }
+        public static void ActiveCards(Player player)
+        {
+            do
+            {
+                Console.WriteLine("Elige la carta que quieres activar");
+                ActiveEffect(player, int.Parse(Console.ReadLine()));
+                Console.WriteLine("Si quiere activar otra carta presione: 1, si no presione 2");
+            } while (int.Parse(Console.ReadLine()) != 2);
+            
+            
+        }
         public static void ActiveEffect(Player player, int HandPossition)
         {
+            
             foreach (var card in player.hand)
             {
                 if(card.cardState==CardState.OnHand)
@@ -146,6 +175,10 @@ namespace card_gameProtot
                 }
             }
             
+        }
+        public static void Attack(Player player, Player enemy)
+        {
+            enemy.life = enemy.life - player.attack;
         }
     }
 }

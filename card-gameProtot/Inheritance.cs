@@ -168,22 +168,22 @@
                 foreach(var Effect in EffectsOrder)
                 {
                     
-                    Player player = SetPlayer(this.Owner, this.Enemy, Effect.Value.relativePlayer);
+                    Player player = SetPlayer(Game.PlayersInventary[0], Game.PlayersInventary[1], Effect.Value.relativePlayer);
                     Player enemy = SetEnemy(player);
                     double actualFactor;
 
                     switch (Effect.Key)
                     {
                         case 1:
-                            TakeFromDeck(Owner, Enemy, Effect.Value.affects, Effect.Value.affectedIds);
+                            TakeFromDeck(player, enemy, Effect.Value.affects, Effect.Value.affectedIds);
                             break;
 
                         case 2:
-                            TakeFromEnemyHand(Owner, Enemy, Effect.Value.affects);
+                            TakeFromEnemyHand(player, enemy, Effect.Value.affects);
                             break;
 
                         case 3:
-                            TakeFromGraveyard(Owner, Enemy, Effect.Value.affects, Effect.Value.affectedIds);
+                            TakeFromGraveyard(player, enemy, Effect.Value.affects, Effect.Value.affectedIds);
                             break;
 
                         case 4:
@@ -193,24 +193,25 @@
 
                         case 5:
                             actualFactor = setFactor(Effect.Key, player, enemy);
-                            Attack(Owner, Enemy, Effect.Value.affects,  actualFactor);
+                            Attack(player, enemy, Effect.Value.affects,  actualFactor);
                             break;
 
                         case 6:
                             actualFactor = setFactor(Effect.Key, player, enemy);
-                            Defense(Owner, Enemy, Effect.Value.affects, actualFactor);
+                            Defense(player, enemy, Effect.Value.affects, actualFactor);
                             break;
                         
                         case 7:
                             actualFactor = setFactor(Effect.Key, player, enemy);
-                            Discard(Owner, Enemy, Effect.Value.affects, actualFactor, Effect.Value.affectedIds);
+                            Discard(player, enemy, Effect.Value.affects, actualFactor, Effect.Value.affectedIds);
                             break;
 
                         case 8:
-                            ChangeState(Owner, Enemy, Effect.Value.state);
+                            ChangeState(player, enemy, Effect.Value.state);
                             break;
                     }
                 }
+
             }
         }
     }
@@ -458,7 +459,7 @@
         public State state;
         public double factor = 1;
         public int affects;
-        public List<int> affectedIds;
+        public List<int> affectedIds = new List<int>();
         public relativeFactor relativeFactor = relativeFactor.Fixed;
 
         public ActionInfo(int affects, List<int> affectedIds)

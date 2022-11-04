@@ -5,7 +5,6 @@ namespace card_gameProtot
         public static Dictionary<int, Relics> CardsInventary= new Dictionary<int, Relics>();
         public static Dictionary<int, Character> CharactersInventary = new Dictionary<int, Character>();
         public static List<int> GraveYard = new List<int>();
-
         public static void Main(string[] args)
         {
             //Characters
