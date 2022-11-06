@@ -15,8 +15,8 @@ namespace card_gameProtot
             Character character2 = CharactersInventary[int.Parse(Console.ReadLine())];
 
 
-            Player player1 = new Player(character1, "loquito");
-            Player player2 = new Player(character2, "juancito");
+            Player player1 = new Player(character1, "PLayer1");
+            Player player2 = new Player(character2, "Player2");
             PlayersInventary.Add(player1);
             PlayersInventary.Add(player2);
 
@@ -29,7 +29,7 @@ namespace card_gameProtot
             player2.TakeFromDeck(player2, player1, 5, new List<int>());
             
             Console.Clear();
-            while (player1.life != 0 && player2.life != 0)
+            while (player1.life > 0 && player2.life > 0)
             {
                 Console.WriteLine("Turn: "+turn);
                 
@@ -151,6 +151,8 @@ namespace card_gameProtot
         {
             do
             {
+                Console.Clear();
+                player.printInfo();
                 Console.WriteLine("Elige la carta que quieres activar");
                 ActiveEffect(player, int.Parse(Console.ReadLine()));
                 Console.WriteLine("Si quiere activar otra carta presione: 1, si no presione 2");

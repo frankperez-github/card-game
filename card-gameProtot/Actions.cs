@@ -13,7 +13,7 @@ namespace card_gameProtot
                     int random = rnd.Next(1, Program.CardsInventary.Count());
                     Relics relic = Program.CardsInventary[random];
                     
-                    Owner.hand.Add( new Relics(relic.Owner, Enemy, relic.id, relic.name, relic.passiveDuration, relic.activeDuration, 
+                    Owner.hand.Add( new Relics(Owner, Enemy, relic.id, relic.name, relic.passiveDuration, relic.activeDuration, 
                                     relic.imgAddress, relic.isTrap, relic.Condition, relic.EffectsOrder));
                 }
             }

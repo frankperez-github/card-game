@@ -168,7 +168,7 @@
                 foreach(var Effect in EffectsOrder)
                 {
                     
-                    Player player = SetPlayer(Game.PlayersInventary[0], Game.PlayersInventary[1], Effect.Value.relativePlayer);
+                    Player player = SetPlayer(Owner, Enemy, Effect.Value.relativePlayer);
                     Player enemy = SetEnemy(player);
                     double actualFactor;
 
@@ -193,6 +193,7 @@
 
                         case 5:
                             actualFactor = setFactor(Effect.Key, player, enemy);
+                            //Console.WriteLine(this.Owner.nick);
                             Attack(player, enemy, Effect.Value.affects,  actualFactor);
                             break;
 
@@ -265,11 +266,13 @@
         {
             Console.WriteLine();
             Console.WriteLine("Hand: ");
+            int index = 0;
             foreach (var card in hand)
             {
                 if(card.cardState == CardState.OnHand)
                 {
-                    Console.WriteLine("Id: "+ card.id + " Name: "+ card.name);            
+                    Console.WriteLine("CardPossition: "+ index + " Id: "+ card.id + " Name: "+ card.name);            
+                    index++;
                 }
             }
         }

@@ -16,7 +16,7 @@ namespace card_gameProtot
 
 
 
-            Player defaultPlayer = new Player(CharactersInventary[1], "pepito");
+            Player defaultPlayer = new Player(CharactersInventary[1], "default");
             
             //Espada del Destino
             //Te suma 15 de ataque
