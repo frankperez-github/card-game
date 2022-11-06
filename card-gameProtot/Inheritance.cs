@@ -357,6 +357,9 @@
             {
                 foreach(var Effect in EffectsOrder)
                 {
+                    
+                    this.cardState = CardState.Activated;
+                    this.Owner.userBattleField.Add(this);
                     Player affectedPlayer = SetPlayer(Owner, Enemy, Effect.Value.relativePlayer);
                     Player notAffectedPlayer = SetEnemy(affectedPlayer);
                     List<Relics> affectedCards = new List<Relics>();

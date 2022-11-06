@@ -183,9 +183,7 @@ namespace card_gameProtot
         }
         public static void ActivateEffect(Player player, int HandPossition)
         {
-            player.hand[HandPossition].Effect();
-            player.hand[HandPossition].cardState = CardState.Activated;
-            player.userBattleField.Add(player.hand[HandPossition]);    
+            player.hand[HandPossition].Effect();    
         }
         public static void Attack(Player player, Player enemy)
         {
@@ -196,6 +194,10 @@ namespace card_gameProtot
                 {
                     enemy.defense--;
                 }
+                else
+                {
+                    enemy.life = enemy.life - player.attack;
+                }
             }
             else if(enemy.Trap())
             {
@@ -204,11 +206,13 @@ namespace card_gameProtot
                 {
                     ActivateTrapCards(enemy, player.attack);
                 }
+                else
+                {
+                    enemy.life = enemy.life - player.attack;
+                }
             }
-            else
-            {
-                enemy.life = enemy.life - player.attack;
-            }
+            
+            
         }
     }
 }

@@ -21,16 +21,16 @@ namespace card_gameProtot
             //Te suma 15 de ataque
             Dictionary<int, ActionInfo> card1Dict = new Dictionary<int, ActionInfo>();
             ActionInfo card1Info = new ActionInfo(relativePlayer.Owner, 15);
+            Condition condition = new Condition(relativePlayer.Enemy, Property.Life, 50, 2);
             card1Dict.Add(5, card1Info);
-            CardsInventary.Add(1, new Relics(defaultPlayer, defaultPlayer, 1, "Espada del destino", 0, 3, "img", false, new Condition(), card1Dict));
+            CardsInventary.Add(1, new Relics(defaultPlayer, defaultPlayer, 1, "Espada del destino", 0, 3, "img", false, condition, card1Dict));
 
             //Capsula del Tiempo
             //Roba una carta del cementerio
             Dictionary<int, ActionInfo> card2Dict = new Dictionary<int, ActionInfo>();
             ActionInfo card2Info = new ActionInfo(relativePlayer.Owner, 1);
             card2Dict.Add(3, card2Info);
-            Condition condition = new Condition(relativePlayer.Enemy, Property.Life, 50, 2);
-            CardsInventary.Add(2,new Relics(defaultPlayer, defaultPlayer, 2, "Capsula del Tiempo", 0, 28, "imgpath2", false, condition, card2Dict));
+            CardsInventary.Add(2,new Relics(defaultPlayer, defaultPlayer, 2, "Capsula del Tiempo", 0, 28, "imgpath2", false, new Condition(), card2Dict));
 
             //Anillo de Zeus
             //Ganas 5 de vida por cada carta en tu mano
