@@ -193,7 +193,6 @@
 
                         case 5:
                             actualFactor = setFactor(Effect.Key, player, enemy);
-                            //Console.WriteLine(this.Owner.nick);
                             Attack(player, enemy, Effect.Value.affects,  actualFactor);
                             break;
 
