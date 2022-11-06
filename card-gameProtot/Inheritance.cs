@@ -13,7 +13,71 @@
         int OperId;
         State state;
 
-        public Condition(){}
+        public Condition(){
+            public abstract class Expression
+{
+    public abstract double Evaluate();
+}
+
+public abstract class BinaryExpression : Expression
+{
+    protected readonly Expression left;
+    protected readonly Expression right;
+
+    public BinaryExpression(Expression left, Expression right)
+    {
+        this.left = left;
+        this.right = right;
+    }
+
+    public override double Evaluate()
+    {
+        double leftValue = this.left.Evaluate();
+        double rightValue = this.right.Evaluate();
+
+        return this.Evaluate(leftValue, rightValue);
+    }
+
+    protected abstract double Evaluate(double left, double right);
+}
+
+public class Add : BinaryExpression
+{
+    public Add(Expression left, Expression right) : base(left, right)
+    {
+
+    }
+
+    protected override double Evaluate(double left, double right)
+    {
+        return left + right;
+    }
+
+    public override string ToString()
+    {
+        return $"({left.ToString()}) + ({right.ToString()})";
+    }
+}
+
+public class Subtract : BinaryExpression
+{
+    public Subtract(Expression left, Expression right) : base(left, right)
+    {
+
+    }
+
+    protected override double Evaluate(double left, double right)
+    {
+        return left - right;
+    }
+
+    public override string ToString()
+    {
+        return $"({left.ToString()}) - ({right.ToString()})";
+    }
+}
+
+        }
 
         public Condition(relativePlayer relativePlayer, Property property, int b, int operId)
         {
