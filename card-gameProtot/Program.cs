@@ -4,7 +4,6 @@ namespace card_gameProtot
     {
         public static Dictionary<int, Relics> CardsInventary= new Dictionary<int, Relics>();
         public static Dictionary<int, Character> CharactersInventary = new Dictionary<int, Character>();
-        public static List<int> GraveYard = new List<int>();
         public static void Main(string[] args)
         {
             //Characters
@@ -30,7 +29,8 @@ namespace card_gameProtot
             Dictionary<int, ActionInfo> card2Dict = new Dictionary<int, ActionInfo>();
             ActionInfo card2Info = new ActionInfo(relativePlayer.Owner, 1);
             card2Dict.Add(3, card2Info);
-            CardsInventary.Add(2,new Relics(defaultPlayer, defaultPlayer, 2, "Capsula del Tiempo", 0, 1, "imgpath2", false,new Condition(), card2Dict));
+            Condition condition = new Condition(relativePlayer.Enemy, Property.Life, 50, 2);
+            CardsInventary.Add(2,new Relics(defaultPlayer, defaultPlayer, 2, "Capsula del Tiempo", 0, 28, "imgpath2", false,new Condition(), card2Dict));
 
             //Anillo de Zeus
             //Ganas 5 de vida por cada carta en tu mano
@@ -41,10 +41,10 @@ namespace card_gameProtot
             CardsInventary.Add(3 ,new Relics(defaultPlayer1, defaultPlayer, 3, "Anillo de Zeus", 0, 1, "imgpath3", false,  new Condition(), card3Dict));
 
             //Escudo de la pobreza
-            //Trap, evita el 50% del dano del enemigo
+            //Trap, evita el 50% del daño del enemigo
             Dictionary<int, ActionInfo> card4Dict = new Dictionary<int, ActionInfo>();
             ActionInfo card4Info = new ActionInfo(relativePlayer.Owner, 1, 0.5, relativeFactor.Fixed);
-            card4Dict.Add(6, card4Info);
+            card4Dict.Add(4, card4Info);
             CardsInventary.Add(4,new Relics(defaultPlayer, defaultPlayer, 4, "Escudo de la pobreza", 0, 1, "imgpath", true, new Condition(), card4Dict));
 
             //Libro de los secretos 

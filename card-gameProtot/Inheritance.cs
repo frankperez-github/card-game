@@ -4,67 +4,89 @@
     //ActiveDuration: Cuanto tiempo dura el efecto
     public class Condition
     {
+        
         public bool condition;
+        relativePlayer relativePlayer;
+        Player player;
+        Property property;
+        int b;
+        int OperId;
+        State state;
 
-        public Condition()
+        public Condition(){}
+
+        public Condition(relativePlayer relativePlayer, Property property, int b, int operId)
         {
-            this.condition = true;
+            this.relativePlayer = relativePlayer;
+            this.property = property;
+            this.b = b;
+            this.OperId = operId;
         }
-        public Condition(int a, int b, int operId)
+        
+        bool Evaluate(Player Owner, Player Enemy)
         {
-            switch (operId)
+            Player affected = Relics.SetPlayer(Owner, Enemy, this.relativePlayer);
+            
+            if(relativePlayer == relativePlayer.NULL) // && card condition
             {
-                case 1: // = operator
-                    if (a == b)
-                    {
-                        this.condition = true;
-                    }
-                    break; 
-
-                case 2: // < operator
-                    if (a < b)
-                    {
-                        this.condition = true;
-                    }
-                    break; 
-
-                case 3: // > operator
-                    if (a > b)
-                    {
-                        this.condition = true;
-                    }
-                    break;
-
-                case 4: // <= operator
-                    if (a <= b)
-                    {
-                        this.condition = true;
-                    }
-                    break; 
-
-                case 5: // >= operator
-                    if (a >= b)
-                    {
-                        this.condition = true;
-                    }
-                    break;  
-
+                return true;
             }
+            
+            // switch (operId)
+            // {
+            //     case 1: // = operator
+            //         if (a == b)
+            //         {
+            //             this.condition = true;
+            //         }
+            //         break; 
+
+            //     case 2: // < operator
+            //         if (a < b)
+            //         {
+            //             this.condition = true;
+            //         }
+            //         break; 
+
+            //     case 3: // > operator
+            //         if (a > b)
+            //         {
+            //             this.condition = true;
+            //         }
+            //         break;
+
+            //     case 4: // <= operator
+            //         if (a <= b)
+            //         {
+            //             this.condition = true;
+            //         }
+            //         break; 
+
+            //     case 5: // >= operator
+            //         if (a >= b)
+            //         {
+            //             this.condition = true;
+            //         }
+            //     break;
+            // }
+            
+            return false;
         }
         public Condition(State a, State b)
         {
+            this.condition = true;
             if (a == b)
             {
                 this.condition = true;
             }
         }
-        public Condition(CardState a, CardState b)
-        {
-            if (a == b)
-            {
-                this.condition = true;
-            }
-        }
+        // public Condition(CardState a, CardState b)
+        // {
+        //     if (a == b)
+        //     {
+        //         this.condition = true;
+        //     }
+        // }
 
 
     }
@@ -163,51 +185,51 @@
                 
         public void Effect()
         {
-            if (Condition.condition)
+            if (true)
             {
                 foreach(var Effect in EffectsOrder)
                 {
-                    
-                    Player player = SetPlayer(Owner, Enemy, Effect.Value.relativePlayer);
-                    Player enemy = SetEnemy(player);
+                    Player affectedPlayer = SetPlayer(Owner, Enemy, Effect.Value.relativePlayer);
+                    Player notAffectedPlayer = SetEnemy(affectedPlayer);
+                    List<Relics> affectedCards = new List<Relics>();
                     double actualFactor;
 
                     switch (Effect.Key)
                     {
                         case 1:
-                            TakeFromDeck(player, enemy, Effect.Value.affects, Effect.Value.affectedIds);
+                            TakeFromDeck(affectedPlayer, notAffectedPlayer, Effect.Value.affects, affectedCards);
                             break;
 
                         case 2:
-                            TakeFromEnemyHand(player, enemy, Effect.Value.affects);
+                            TakeFromEnemyHand(affectedPlayer, notAffectedPlayer, Effect.Value.affects);
                             break;
 
                         case 3:
-                            TakeFromGraveyard(player, enemy, Effect.Value.affects, Effect.Value.affectedIds);
+                            TakeFromGraveyard(affectedPlayer, notAffectedPlayer, Effect.Value.affects, affectedCards);
                             break;
 
                         case 4:
-                            actualFactor = setFactor(Effect.Key, player, enemy);
-                            Life(player, enemy, Effect.Value.affects, actualFactor);
+                            actualFactor = setFactor(Effect.Key, affectedPlayer, notAffectedPlayer);
+                            Life(affectedPlayer, Effect.Value.affects, actualFactor);
                             break;
 
                         case 5:
-                            actualFactor = setFactor(Effect.Key, player, enemy);
-                            Attack(player, enemy, Effect.Value.affects,  actualFactor);
+                            actualFactor = setFactor(Effect.Key, affectedPlayer, notAffectedPlayer);
+                            Attack(affectedPlayer, Effect.Value.affects,  actualFactor);
                             break;
 
                         case 6:
-                            actualFactor = setFactor(Effect.Key, player, enemy);
-                            Defense(player, enemy, Effect.Value.affects, actualFactor);
+                            actualFactor = setFactor(Effect.Key, affectedPlayer, notAffectedPlayer);
+                            Defense(affectedPlayer, Effect.Value.affects, actualFactor);
                             break;
                         
                         case 7:
-                            actualFactor = setFactor(Effect.Key, player, enemy);
-                            Discard(player, enemy, Effect.Value.affects, actualFactor, Effect.Value.affectedIds);
+                            actualFactor = setFactor(Effect.Key, affectedPlayer, notAffectedPlayer);
+                            Discard(affectedPlayer, Effect.Value.affects, actualFactor, affectedCards);
                             break;
 
                         case 8:
-                            ChangeState(player, enemy, Effect.Value.state);
+                            ChangePlayerState(affectedPlayer, Effect.Value.state);
                             break;
                     }
                 }
@@ -242,6 +264,8 @@
         public string nick = "";
         public double life;
         public List<Relics> hand = new List<Relics>();
+        public List<Relics> userGraveYard = new List<Relics>();
+        public List<Relics> userBattleField = new List<Relics>();
         public State state = State.Safe;
 
         public Player(Character character, string nick): base(character.name, character.passiveDuration, character.activeDuration, character.imgAddress, character.attack, character.defense) 
@@ -268,57 +292,55 @@
             int index = 0;
             foreach (var card in hand)
             {
-                if(card.cardState == CardState.OnHand)
-                {
-                    Console.WriteLine("CardPossition: "+ index + " Id: "+ card.id + " Name: "+ card.name);            
-                    index++;
-                }
+                Console.WriteLine("CardPossition: "+ index + " Id: "+ card.id + " Name: "+ card.name);            
+                index++;
             }
         }
         public void PrintBattleField()
         {
             Console.WriteLine();
-            int quant = 0;
-            foreach (var card in this.hand)
+            foreach (var card in this.userBattleField)
             {
-                if (card.cardState == CardState.Activated)
-                {
-                    quant++;
-                    Console.Write(card.name+", ");
-                }
+                Console.Write(card.name+", ");
             }
             Console.WriteLine();
-            Console.WriteLine("BatteField-"+this.name+": "+quant);
+            Console.WriteLine("BatteField-"+this.name+": "+ this.userBattleField.Count());
             Console.WriteLine();
 
         }
         public void PrintGraveYard()
         {
-            int quant = 0;
-            foreach (var card in this.hand)
+            foreach (var card in Game.GraveYard)
             {
-                if (card.cardState == CardState.OnGraveyard)
-                {
-                    quant++;
-                    Console.Write(card.name+", ");
-                }
-                
+                Console.Write(card.name+", ");
             }
             Console.WriteLine();
-            Console.WriteLine("Graveyard-"+this.name+": "+quant);
+            Console.WriteLine("Graveyard-"+this.name+": "+ Game.GraveYard.Count());
 
         }
         public int getCardType(CardState cardState)
         {
-            int total = 0;
-            foreach (var card in this.hand)
+            switch (cardState)
             {
-                if (card.cardState == cardState)
+                case CardState.OnHand:
+                    return this.hand.Count();
+                case CardState.Activated:
+                    return this.userBattleField.Count();
+                case CardState.OnGraveyard:
+                    return Game.GraveYard.Count();
+            }
+            return 0;
+        }
+        public bool Trap()
+        {
+            foreach (var card in hand)
+            {
+                if(card.cardState == CardState.OnHand && card.isTrap)
                 {
-                    total++;
+                    return true;
                 }
             }
-            return total;
+            return false;
         }
     }
 
@@ -460,7 +482,7 @@
         public relativePlayer relativePlayer;
         public State state;
         public double factor = 1;
-        public int affects;
+        public double affects;
         public List<int> affectedIds = new List<int>();
         public relativeFactor relativeFactor = relativeFactor.Fixed;
 
@@ -531,7 +553,17 @@
     public enum relativePlayer
     {
         Owner,
-        Enemy
+        Enemy,
+        NULL
+    }
+    public enum Property
+    {
+        Life,
+        Defense,
+        Attack,
+        Hand,
+        BatteField,
+        GraveYard
     }
     
     #endregion
