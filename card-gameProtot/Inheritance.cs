@@ -3,268 +3,12 @@
     //PassiveDuration: Cada cuanto tiempo se activa el efecto
     //ActiveDuration: Cuanto tiempo dura el efecto
     
-    public abstract class Expression
-    {
-        public abstract bool Evaluate();
-    }
-
-    public abstract class BinaryExpression : Expression
-    {
-        protected readonly Expression left;
-        protected readonly Expression right;
-
-        public BinaryExpression(Expression left, Expression right)
-        {
-            this.left = left;
-            this.right = right;
-        }
-
-        public override bool Evaluate()
-        {
-            bool leftValue = this.left.Evaluate();
-            bool rightValue = this.right.Evaluate();
-
-            return this.Evaluate(leftValue, rightValue);
-        }
-
-        protected abstract bool Evaluate(bool left, bool right);
-    }
-
-    public class And : BinaryExpression
-    {
-        public And(Expression left, Expression right) : base(left, right)
-        {
-
-        }
-
-        protected override bool Evaluate(bool left, bool right)
-        {
-            return (left && right);
-        }
-    }
-
-    public class Or : BinaryExpression
-    {
-        public Or(Expression left, Expression right) : base(left, right)
-        {
-
-        }
-
-        protected override bool Evaluate(bool left, bool right)
-        {
-            return (left || right);
-        }
-    }
-    public class Condition
-    {
-        
-        public bool condition;
-        relativePlayer relativePlayer;
-        relativePlayer relativePlayer1;
-        Player player;
-        Property property;
-        int b = 0;
-        int OperId;
-        State state;
-
-        public Condition(){
-            this.condition = true;
-        }
-
-        public Condition(relativePlayer relativePlayer, Property property, int b, int operId)
-        {
-            this.relativePlayer = relativePlayer;
-            this.property = property;
-            this.b = b;
-            this.OperId = operId;
-        }
-        
-        public Condition (relativePlayer relativePlayer, State state)
-        {
-            this.relativePlayer = relativePlayer;
-            this.state = state;
-        }
-        public Condition(relativePlayer relativePlayer, Property property, relativePlayer relativePlayer1, int operId)
-        {
-            this.relativePlayer = relativePlayer;
-            this.property = property;
-            this.relativePlayer1 = relativePlayer1;
-            this.OperId = operId;
-        }
-        
-        public bool Evaluate(Player Owner, Player Enemy)
-        {
-            // Comparing a player's property with a number
-            if (this.b != 0)
-            {
-                Player affected = Relics.SetPlayer(Owner, Enemy, this.relativePlayer);
-                switch (this.property)
-                {
-                    case Property.Attack:
-                        switch (this.OperId)
-                        {
-                            case 1:
-                                return affected.attack >= this.b;
-                            case 2:
-                                return affected.attack <= this.b;
-                            case 3:
-                                return affected.attack == this.b;
-                        }
-                        break;
-
-                    case Property.BatteField:
-                        switch (this.OperId)
-                        {
-                            case 1:
-                                return affected.userBattleField.Count() >= this.b;
-                            case 2:
-                                return affected.userBattleField.Count() <= this.b;
-                            case 3:
-                                return affected.userBattleField.Count() == this.b;
-                        }
-                        break;
-
-                    case Property.Defense:
-                        switch (this.OperId)
-                        {
-                            case 1:
-                                return affected.defense >= this.b;
-                            case 2:
-                                return affected.defense <= this.b;
-                            case 3:
-                                return affected.defense == this.b;
-                        }
-                        break;
-
-                    case Property.GraveYard:
-                        switch (this.OperId)
-                        {
-                            case 1:
-                                return Game.GraveYard.Count() >= this.b;
-                            case 2:
-                                return Game.GraveYard.Count() <= this.b;
-                            case 3:
-                                return Game.GraveYard.Count() == this.b;
-                        }
-                        break;
-                    
-                    case Property.Hand:
-                        switch (this.OperId)
-                        {
-                            case 1:
-                                return affected.hand.Count() >= this.b;
-                            case 2:
-                                return affected.hand.Count() <= this.b;
-                            case 3:
-                                return affected.hand.Count() == this.b;
-                        }
-                        break;
-                    
-                    case Property.Life:
-                        switch (this.OperId)
-                        {
-                            case 1:
-                                return affected.life >= this.b;
-                            case 2:
-                                return affected.life <= this.b;
-                            case 3:
-                                return affected.life == this.b;
-                        }
-                        break;
-
-                }
-
-            }
-            // Comparing only states
-            if (this.state != State.NULL)
-            {
-                Player affected = Relics.SetPlayer(Owner, Enemy, this.relativePlayer);
-                return affected.state == this.state;
-            }
-            // Comparing a player's property with another player's same property
-            if(relativePlayer != relativePlayer.NULL)
-            {
-                Player player = Relics.SetPlayer(Owner, Enemy, this.relativePlayer);
-                Player player2 = Relics.SetPlayer(Owner, Enemy, this.relativePlayer1);
-                
-                switch (this.property)
-                {
-                    case Property.Attack:
-                        switch (this.OperId)
-                        {
-                            case 1:
-                                return player.attack >= player2.attack;
-                            case 2:
-                                return player.attack <= player2.attack;
-                            case 3:
-                                return player.attack == player2.attack;
-                        }
-                        break;
-
-                    case Property.Defense:
-                        switch (this.OperId)
-                        {
-                            case 1:
-                                return player.defense >= player2.defense;
-                            case 2:
-                                return player.defense <= player2.defense;
-                            case 3:
-                                return player.defense == player2.defense;
-                        }
-                        break;
-
-                    case Property.Life:
-                        switch (this.OperId)
-                        {
-                            case 1:
-                                return player.life >= player2.life;
-                            case 2:
-                                return player.life <= player2.life;
-                            case 3:
-                                return player.life == player2.life;
-                        }
-                        break;
-
-                    case Property.BatteField:
-                        switch (this.OperId)
-                        {
-                            case 1:
-                                return player.userBattleField.Count() >= player2.userBattleField.Count();
-                            case 2:
-                                return player.userBattleField.Count() <= player2.userBattleField.Count();
-                            case 3:
-                                return player.userBattleField.Count() == player2.userBattleField.Count();
-                        }
-                        break;
-                    
-                    case Property.Hand:
-                        switch (this.OperId)
-                        {
-                            case 1:
-                                return player.hand.Count() >= player2.hand.Count();
-                            case 2:
-                                return player.hand.Count() <= player2.hand.Count();
-                            case 3:
-                                return player.hand.Count() == player2.hand.Count();
-                        }
-                        break;
-                }
-            }
-
-            this.condition = false;
-            return false;
-        }
-        
-
-
-    }
     public class Cards : Actions
     {
         public string name = "";
         public int activeDuration;
         public int passiveDuration;
         public string imgAddress = "";
-        Condition condition;
 
         public Cards(string name, int passiveDuration, int activeDuration, string imgAddress)
         {
@@ -279,21 +23,21 @@
         public int id;
         public Player Owner;
         public Player Enemy;
+        public string condition = "";
         public Dictionary<int, ActionInfo> EffectsOrder = new Dictionary<int, ActionInfo>();
-        public Condition Condition;
         public bool isTrap;
         public CardState cardState = CardState.OnDeck;
 
-        public Relics(Player Owner, Player Enemy, int id, string Name, int passiveDuration, int activeDuration, string imgAddress, bool isTrap, Condition condition, Dictionary<int, ActionInfo> EffectsOrder) 
+        public Relics(Player Owner, Player Enemy, int id, string Name, int passiveDuration, int activeDuration, string imgAddress, bool isTrap, string condition, Dictionary<int, ActionInfo> EffectsOrder) 
                       : base (Name, passiveDuration, activeDuration, imgAddress)
         {
             this.Owner = Owner;
             this.Enemy = Enemy;
             this.id = id;
             this.EffectsOrder = EffectsOrder;
-            this.Condition = condition;
             this.cardState = CardState.OnHand;
             this.isTrap = isTrap;
+            this.condition = condition;
         }
 
         public static Player SetPlayer(Player Owner, Player Enemy, relativePlayer relativePlayer)
@@ -353,7 +97,7 @@
                 
         public void Effect()
         {
-            if (this.Condition.Evaluate(Owner, Enemy))
+            if (condition == "" || new BoolEx(this.condition, Owner, Enemy).ScanExpression())
             {
                 foreach(var Effect in EffectsOrder)
                 {
