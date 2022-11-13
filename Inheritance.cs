@@ -103,7 +103,7 @@
                 {
                     
                     this.cardState = CardState.Activated;
-                    this.Owner.userBattleField.Add(this);
+                    this.Owner.userBattleField.ToList().Add(this);
                     Player affectedPlayer = SetPlayer(Owner, Enemy, Effect.Value.relativePlayer);
                     Player notAffectedPlayer = SetEnemy(affectedPlayer);
                     List<Relics> affectedCards = new List<Relics>();
@@ -144,6 +144,7 @@
                             break;
 
                         case 8:
+                            Console.WriteLine(Effect.Value.relativePlayer);
                             ChangePlayerState(affectedPlayer, Effect.Value.state);
                             break;
                     }
@@ -179,7 +180,7 @@
         public string nick = "";
         public double life;
         public List<Relics> hand = new List<Relics>();
-        public List<Relics> userBattleField = new List<Relics>();
+        public Relics[] userBattleField;
         public State state = State.Safe;
 
         public Player(Character character, string nick): base(character.name, character.passiveDuration, character.activeDuration, character.imgAddress, character.attack, character.defense) 

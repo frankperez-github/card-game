@@ -112,6 +112,7 @@ namespace card_gameProtot
             //Console.WriteLine(string.Join(" ", result));
             return result;
         }
+        //We need to change enemy player state 
         public static void UpdateBattleField(Player player)
         {
             for (int index = 0; index < player.userBattleField.Count(); index++)
@@ -126,9 +127,13 @@ namespace card_gameProtot
                             player.userBattleField[index].Effect();
                             effect.Value.affects = effect.Value.affects*(-1);
                         }
+                        else if(effect.Key == 8)
+                        {
+                            //Change State of Enemy Player 
+                        }
                     }
                     GraveYard.Add(player.userBattleField[index]);
-                    player.userBattleField.Remove(player.userBattleField[index]); // Removing card from battelfield
+                    player.userBattleField.ToList().Remove(player.userBattleField[index]); // Removing card from battelfield
                 }
                 else
                 {
@@ -173,7 +178,7 @@ namespace card_gameProtot
                     }
                 }
                 player.hand[HandPosition].Effect();
-                player.userBattleField.Add(player.hand[HandPosition]);
+                player.userBattleField.ToList().Add(player.hand[HandPosition]);
                 player.hand[HandPosition].cardState = CardState.Activated;
                 player.hand.Remove(player.hand[HandPosition]);                            
                 Console.WriteLine("Si quiere activar otra carta presione: 1, si no presione 2");

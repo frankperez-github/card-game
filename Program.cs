@@ -29,7 +29,7 @@ namespace card_gameProtot
             Dictionary<int, ActionInfo> card2Dict = new Dictionary<int, ActionInfo>();
             ActionInfo card2Info = new ActionInfo(relativePlayer.Owner, 1);
             card2Dict.Add(3, card2Info);
-            CardsInventary.Add(2,new Relics(defaultPlayer, defaultPlayer, 2, "Capsula del Tiempo", 0, 28, "imgpath2", false, "", card2Dict));
+            CardsInventary.Add(2,new Relics(defaultPlayer, defaultPlayer, 2, "Capsula del Tiempo", 0, 1, "imgpath2", false, "", card2Dict));
 
             //Anillo de Zeus
             //Ganas 5 de vida por cada carta en tu mano
@@ -58,23 +58,17 @@ namespace card_gameProtot
             Dictionary<int, ActionInfo> card6Dict = new Dictionary<int, ActionInfo>();
             ActionInfo card6Info = new ActionInfo(relativePlayer.Enemy, 2, new List<int>());
             card6Dict.Add(7, card6Info);
-            CardsInventary.Add(6,new Relics(defaultPlayer, defaultPlayer, 5, "Libro de los secretos", 0, 1, "imgpath4", false, "", card6Dict));
+            CardsInventary.Add(6,new Relics(defaultPlayer, defaultPlayer, 5, "Caliz de la Venganza", 0, 1, "imgpath4", false, "", card6Dict));
 
+            //Resfriado
+            //El adversario queda congelado por 2 turnos
+            Dictionary<int, ActionInfo> card7Dict = new Dictionary<int, ActionInfo>();
+            ActionInfo card7Info = new ActionInfo(relativePlayer.Enemy, State.Freezed);
+            card7Dict.Add(8, card7Info);
+            CardsInventary.Add(7,new Relics(defaultPlayer, defaultPlayer, 6, "Resfriado", 1, 1, "imgpath4", false, "", card7Dict));
 
-
+            
             Game.game();
-        }
-        public static void game(Character character1, Character character2)
-        {
-
-            
-            
-            
-
-
-
-
-            
         }
             
     }

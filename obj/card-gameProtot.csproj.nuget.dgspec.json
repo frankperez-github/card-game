@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\card-game\\card-gameProtot\\card-gameProtot.csproj": {}
+    "D:\\card-game\\card-gameProtot.csproj": {}
   },
   "projects": {
-    "D:\\card-game\\card-gameProtot\\card-gameProtot.csproj": {
+    "D:\\card-game\\card-gameProtot.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\card-game\\card-gameProtot\\card-gameProtot.csproj",
+        "projectUniqueName": "D:\\card-game\\card-gameProtot.csproj",
         "projectName": "card-gameProtot",
-        "projectPath": "D:\\card-game\\card-gameProtot\\card-gameProtot.csproj",
+        "projectPath": "D:\\card-game\\card-gameProtot.csproj",
         "packagesPath": "C:\\Users\\bathr\\.nuget\\packages\\",
-        "outputPath": "D:\\card-game\\card-gameProtot\\obj\\",
+        "outputPath": "D:\\card-game\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

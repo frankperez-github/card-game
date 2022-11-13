@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "Jf3JV7TK7Ls4IhAX3GpYxnhvHNGNpw86t+B06/nPvvlMk8oGP7IeFvS40pTBQ1Y6/UO7MZTGthvVu9A11ix45g==",
+  "dgSpecHash": "9eK7GV65XLcbHHJqusjyfEpNTQmuUA95+pRZmeZCfIDOEyQxH/koqYt2JEqjNg8Hd1SSzRv0qswbJGk1zKcYug==",
   "success": true,
-  "projectFilePath": "D:\\card-game\\card-gameProtot\\card-gameProtot.csproj",
+  "projectFilePath": "D:\\card-game\\card-gameProtot.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }

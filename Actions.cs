@@ -10,7 +10,7 @@ namespace card_gameProtot
                 for (int i = 0; i < cards; i++)
                 {
                     Random rnd = new Random();
-                    int random = rnd.Next(1, Program.CardsInventary.Count());
+                    int random = rnd.Next(1, Program.CardsInventary.Count()+1);
                     Relics relic = Program.CardsInventary[random];
                     
                     Affected.hand.Add( new Relics(Affected, Enemy, relic.id, relic.name, relic.passiveDuration, relic.activeDuration, 
@@ -127,6 +127,8 @@ namespace card_gameProtot
         }
         public void ChangePlayerState(Player Affected,  State state)
         {
+            Console.WriteLine(state);
+            Console.ReadKey();
             Affected.state = state;
         }
         public void RemoveFromBattleField(List<Relics> affectedcards)
@@ -134,10 +136,9 @@ namespace card_gameProtot
             foreach (var card in affectedcards)
             {
                 Game.GraveYard.Add(Program.CardsInventary[card.id]);
-                card.Owner.userBattleField.Remove(card);
+                card.Owner.userBattleField.ToList().Remove(card);
             }
         }
-
         public void EvitarDaño(Player Affected, double affects, double factor)
         {
             //  += affects * factor;
