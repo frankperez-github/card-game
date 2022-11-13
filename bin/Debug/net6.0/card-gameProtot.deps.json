@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v6.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v6.0": {
+      "card-gameProtot/1.0.0": {
+        "runtime": {
+          "card-gameProtot.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "card-gameProtot/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
