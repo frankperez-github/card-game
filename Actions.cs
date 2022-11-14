@@ -129,16 +129,20 @@ namespace card_gameProtot
         }
         public void ChangePlayerState(Player Affected,  State state)
         {
-            Console.WriteLine(state);
-            Console.ReadKey();
             Affected.state = state;
         }
-        public void RemoveFromBattleField(List<Relics> affectedcards)
+        public void RemoveFromBattleField(Player Affected, List<Relics> affectedcards)
         {
             foreach (var card in affectedcards)
             {
-                Game.GraveYard.Add(Program.CardsInventary[card.id]);
-                card.Owner.userBattleField.ToList().Remove(card);
+                for (int i = 0; i < Affected.userBattleField.Length; i++)
+                {
+                    if(Affected.userBattleField[i] == card)
+                    {
+                        Game.GraveYard.Add(Program.CardsInventary[card.id]);
+                        Affected.userBattleField[i] = null;
+                    }
+                }
             }
         }
         public void EvitarDaño(Player Affected, double affects, double factor)

@@ -417,13 +417,16 @@ namespace card_gameProtot
             {
                 foreach (var Relic in list)
                 {
-                    if(type == "random")
+                    if(Relic != null)
                     {
-                        result.Add(Relic);
-                    }
-                    else if(Relic.type == type)
-                    {
-                        result.Add(Relic);
+                        if(type == "random")
+                        {
+                            result.Add(Relic);
+                        }
+                        else if(Relic.type == type)
+                        {
+                            result.Add(Relic);
+                        }
                     }
                 }
                 return result;
@@ -432,14 +435,17 @@ namespace card_gameProtot
             List<Relics> Cache = new List<Relics>();
             foreach (var Relic in list)
             {
-                if(type == "random")
+                if(Relic != null)
                 {
-                    Cache.Add(Relic);
-                    Console.WriteLine(Relic.name);
-                }
-                else if(Relic.type == type)
-                {
-                    Cache.Add(Relic);
+                    if(type == "random")
+                    {
+                        Cache.Add(Relic);
+                        Console.WriteLine(Relic.name);
+                    }
+                    else if(Relic.type == type)
+                    {
+                        Cache.Add(Relic);
+                    }
                 }
             }
             Console.WriteLine("Seleccione las cartas que desee:");

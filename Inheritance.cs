@@ -23,6 +23,8 @@
         public int id;
         public Player Owner;
         public Player Enemy;
+        public Player Affected;
+        public Player notAffected;
         public string condition = "";
         public string type = ""; 
         public Dictionary<int, ActionInfo> EffectsOrder = new Dictionary<int, ActionInfo>();
@@ -42,29 +44,25 @@
             this.condition = condition;
         }
 
-        public static Player SetPlayer(Player Owner, Player Enemy, relativePlayer relativePlayer)
+        public void SetPlayer(Player Owner, Player Enemy, relativePlayer relativePlayer)
         {
-            Player player;
             if (relativePlayer == relativePlayer.Owner)
             {
-                player = Owner;
+                this.Affected = Owner;
             }
             else
             {
-                player = Enemy;
+                this.Affected = Enemy;
             }
-            return player;
         }
-        public static Player SetEnemy(Player Owner)
+        public  void SetEnemy()
         {
-            Player Enemy;
-
             foreach (var player in Game.PlayersInventary)
             {
-                if (player != Owner)
+                if (player != this.Affected)
                 {
-                    Enemy = player;
-                    return Enemy;
+                    this.notAffected = player;
+                    return;
                 }
             }
             throw(new Exception("Error in Actions.SetEnemy()"));
@@ -118,48 +116,50 @@
                     
                     this.cardState = CardState.Activated;
                     AddtoBattleField();
-                    Player affectedPlayer = SetPlayer(Owner, Enemy, Effect.Value.relativePlayer);
-                    Player notAffectedPlayer = SetEnemy(affectedPlayer);
-                    List<Relics> affectedCards = new InterpreterList().FullList(Effect.Value.CardList, affectedPlayer);
+                    SetPlayer(Owner, Enemy, Effect.Value.relativePlayer);
+                    SetEnemy();
+                    List<Relics> affectedCards = new InterpreterList().FullList(Effect.Value.CardList, this.Affected);
                     double actualFactor;
 
                     switch (Effect.Key)
                     {
                         case 1:
-                            TakeFromDeck(affectedPlayer, notAffectedPlayer, Effect.Value.affects, affectedCards);
+                            TakeFromDeck(this.Affected, this.notAffected, Effect.Value.affects, affectedCards);
                             break;
 
                         case 2:
-                            TakeFromEnemyHand(affectedPlayer, notAffectedPlayer, Effect.Value.affects);
+                            TakeFromEnemyHand(this.Affected, this.notAffected, Effect.Value.affects);
                             break;
 
                         case 3:
-                            TakeFromGraveyard(affectedPlayer, notAffectedPlayer, Effect.Value.affects, affectedCards);
+                            TakeFromGraveyard(this.Affected, this.notAffected, Effect.Value.affects, affectedCards);
                             break;
 
                         case 4:
-                            actualFactor = setFactor(Effect.Key, affectedPlayer, notAffectedPlayer);
-                            Life(affectedPlayer, Effect.Value.affects, actualFactor);
+                            actualFactor = setFactor(Effect.Key, this.Affected, this.notAffected);
+                            Life(this.Affected, Effect.Value.affects, actualFactor);
                             break;
 
                         case 5:
-                            actualFactor = setFactor(Effect.Key, affectedPlayer, notAffectedPlayer);
-                            Attack(affectedPlayer, Effect.Value.affects,  actualFactor);
+                            actualFactor = setFactor(Effect.Key, this.Affected, this.notAffected);
+                            Attack(this.Affected, Effect.Value.affects,  actualFactor);
                             break;
 
                         case 6:
-                            actualFactor = setFactor(Effect.Key, affectedPlayer, notAffectedPlayer);
-                            Defense(affectedPlayer, Effect.Value.affects, actualFactor);
+                            actualFactor = setFactor(Effect.Key, this.Affected, this.notAffected);
+                            Defense(this.Affected, Effect.Value.affects, actualFactor);
                             break;
                         
                         case 7:
-                            actualFactor = setFactor(Effect.Key, affectedPlayer, notAffectedPlayer);
-                            Discard(affectedPlayer, Effect.Value.affects, actualFactor, affectedCards);
+                            actualFactor = setFactor(Effect.Key, this.Affected, this.notAffected);
+                            Discard(this.Affected, Effect.Value.affects, actualFactor, affectedCards);
                             break;
 
                         case 8:
-                            Console.WriteLine(Effect.Value.relativePlayer);
-                            ChangePlayerState(affectedPlayer, Effect.Value.state);
+                            ChangePlayerState(this.Affected, Effect.Value.state);
+                            break;
+                        case 9:
+                            RemoveFromBattleField(this.Affected, affectedCards);
                             break;
                     }
                 }

@@ -58,15 +58,21 @@ namespace card_gameProtot
             Dictionary<int, ActionInfo> card6Dict = new Dictionary<int, ActionInfo>();
             ActionInfo card6Info = new ActionInfo(relativePlayer.Enemy, 2, "hand.random.2");
             card6Dict.Add(7, card6Info);
-            CardsInventary.Add(6,new Relics(defaultPlayer, defaultPlayer, 5, "Caliz de la Venganza", 0, 1, "imgpath4", false, "", "draw", card6Dict));
+            CardsInventary.Add(6,new Relics(defaultPlayer, defaultPlayer, 6, "Caliz de la Venganza", 0, 1, "imgpath4", false, "", "draw", card6Dict));
 
             //Resfriado
             //El adversario queda congelado por 2 turnos
             Dictionary<int, ActionInfo> card7Dict = new Dictionary<int, ActionInfo>();
             ActionInfo card7Info = new ActionInfo(relativePlayer.Enemy, State.Freezed);
             card7Dict.Add(8, card7Info);
-            CardsInventary.Add(7,new Relics(defaultPlayer, defaultPlayer, 6, "Resfriado", 1, 1, "imgpath4", false, "", "state", card7Dict));
+            CardsInventary.Add(7,new Relics(defaultPlayer, defaultPlayer, 7, "Resfriado", 1, 2, "imgpath4", false, "", "state", card7Dict));
 
+            //Objetivo enemigo
+            //Destruye 1 reliquia que tenga activa enemigo
+            Dictionary<int, ActionInfo> card8Dict = new Dictionary<int, ActionInfo>();
+            ActionInfo card8Info = new ActionInfo(relativePlayer.Enemy, 1, "battlefield.random.1");
+            card8Dict.Add(9, card8Info);
+            CardsInventary.Add(8,new Relics(defaultPlayer, defaultPlayer, 8, "Objetivo Enemigo", 0, 1, "imgpath4", false, "", "trap", card8Dict));
             
             Game.game();
         }

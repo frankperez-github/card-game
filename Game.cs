@@ -127,15 +127,14 @@ namespace card_gameProtot
                             {
                                 effect.Value.affects = effect.Value.affects*(-1); 
                                 player.userBattleField[index].Effect();
-                                effect.Value.affects = effect.Value.affects*(-1);
                             }
                             else if(effect.Key == 8)
                             {
-                                
+                                player.userBattleField[index].Affected.state = State.Safe;
                             }
                         }
-                        GraveYard.Add(player.userBattleField[index]);
-                        player.userBattleField.ToList().Remove(player.userBattleField[index]); // Removing card from battelfield
+                        GraveYard.Add(player.userBattleField[index]); 
+                        player.userBattleField[index] = null; // Removing card from battelfield
                     }
                     else
                     {
