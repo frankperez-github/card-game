@@ -14,7 +14,7 @@ namespace card_gameProtot
                     Relics relic = Program.CardsInventary[random];
                     
                     Affected.hand.Add( new Relics(Affected, Enemy, relic.id, relic.name, relic.passiveDuration, relic.activeDuration, 
-                                    relic.imgAddress, relic.isTrap, relic.condition, relic.EffectsOrder));
+                                    relic.imgAddress, relic.isTrap, relic.condition, relic.type, relic.EffectsOrder));
                 }
             }
             else
@@ -23,7 +23,7 @@ namespace card_gameProtot
                 {
                     Relics relic = Program.CardsInventary[card.id];
                     Affected.hand.Add( new Relics(Affected, Enemy, relic.id, relic.name, relic.passiveDuration, relic.activeDuration, 
-                                    relic.imgAddress,relic.isTrap, relic.condition, relic.EffectsOrder));
+                                    relic.imgAddress,relic.isTrap, relic.condition, relic.type, relic.EffectsOrder));
                 }
             }
         }
@@ -40,7 +40,7 @@ namespace card_gameProtot
                     Affected.hand.RemoveAt(random);
                     Relics relic = Program.CardsInventary[random];
                     Enemy.hand.Add( new Relics(Affected, Enemy, relic.id, relic.name, relic.passiveDuration, relic.activeDuration, 
-                                    relic.imgAddress,relic.isTrap, relic.condition, relic.EffectsOrder));
+                                    relic.imgAddress,relic.isTrap, relic.condition, relic.type, relic.EffectsOrder));
                 }
             }
         }
@@ -56,7 +56,7 @@ namespace card_gameProtot
                         int cardId = Game.GraveYard[random].id;
                         Relics relic = Program.CardsInventary[cardId];
                         Affected.hand.Add( new Relics(Affected, Enemy, relic.id, relic.name, relic.passiveDuration, relic.activeDuration, 
-                                        relic.imgAddress,relic.isTrap, relic.condition, relic.EffectsOrder));
+                                        relic.imgAddress,relic.isTrap, relic.condition, relic.type, relic.EffectsOrder));
                         Game.GraveYard.RemoveAt(random);
                     }
                     catch(System.Exception)
@@ -75,7 +75,7 @@ namespace card_gameProtot
                         {
                             Relics relic = Program.CardsInventary[card.id];
                             Affected.hand.Add( new Relics(Affected, Enemy, relic.id, relic.name, relic.passiveDuration, relic.activeDuration, 
-                                            relic.imgAddress,relic.isTrap, relic.condition, relic.EffectsOrder));
+                                            relic.imgAddress,relic.isTrap, relic.condition, relic.type, relic.EffectsOrder));
                             Game.GraveYard.Remove(Relic);
                             break;
                         }
@@ -116,11 +116,13 @@ namespace card_gameProtot
                 {
                     try
                     {
-                        Affected.hand.Remove(Program.CardsInventary[card.id]);
+                        Game.GraveYard.Add(Program.CardsInventary[card.id]);
+                        Affected.hand.Remove(card);
                     }
                     catch(System.Exception)
                     {
                         Console.WriteLine("Intentaste descartar una carta que no esta ahi");
+                        Console.ReadKey();
                     }
                 }
             }

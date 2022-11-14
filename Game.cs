@@ -115,40 +115,42 @@ namespace card_gameProtot
         //We need to change enemy player state 
         public static void UpdateBattleField(Player player)
         {
-            for (int index = 0; index < player.userBattleField.Count(); index++)
+            for (int index = 0; index < player.userBattleField.Length; index++)
             {
-                if (player.userBattleField[index].activeDuration == 1)
+                if(player.userBattleField[index] != null)
                 {
-                    foreach (var effect in player.userBattleField[index].EffectsOrder)
+                    if (player.userBattleField[index].activeDuration == 1)
                     {
-                        if(effect.Key == 5)
+                        foreach (var effect in player.userBattleField[index].EffectsOrder)
                         {
-                            effect.Value.affects = effect.Value.affects*(-1); 
-                            player.userBattleField[index].Effect();
-                            effect.Value.affects = effect.Value.affects*(-1);
+                            if(effect.Key == 5)
+                            {
+                                effect.Value.affects = effect.Value.affects*(-1); 
+                                player.userBattleField[index].Effect();
+                                effect.Value.affects = effect.Value.affects*(-1);
+                            }
+                            else if(effect.Key == 8)
+                            {
+                                
+                            }
                         }
-                        else if(effect.Key == 8)
-                        {
-                            //Change State of Enemy Player 
-                        }
-                    }
-                    GraveYard.Add(player.userBattleField[index]);
-                    player.userBattleField.ToList().Remove(player.userBattleField[index]); // Removing card from battelfield
-                }
-                else
-                {
-                    if (player.userBattleField[index].passiveDuration != 0)
-                    {
-                        player.userBattleField[index].passiveDuration--;
+                        GraveYard.Add(player.userBattleField[index]);
+                        player.userBattleField.ToList().Remove(player.userBattleField[index]); // Removing card from battelfield
                     }
                     else
                     {
-                        int Defaultpassive = Program.CardsInventary[player.userBattleField[index].id].passiveDuration;
-                        player.userBattleField[index].passiveDuration = Defaultpassive;
-                        player.userBattleField[index].activeDuration--;
-                    }
+                        if (player.userBattleField[index].passiveDuration != 0)
+                        {
+                            player.userBattleField[index].passiveDuration--;
+                        }
+                        else
+                        {
+                            int Defaultpassive = Program.CardsInventary[player.userBattleField[index].id].passiveDuration;
+                            player.userBattleField[index].passiveDuration = Defaultpassive;
+                            player.userBattleField[index].activeDuration--;
+                        }
+                    }   
                 }
-                
             }
         }
         public static void ActivateCards(Player player)
