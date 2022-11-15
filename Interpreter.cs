@@ -457,4 +457,155 @@ namespace card_gameProtot
         }
         
     }
+
+
+    class InterpetAction
+    {
+        public Player Affected;
+        public Player NotAffected;
+        public string Action = "";
+        public Relics card;
+        public InterpetAction(string action, Relics card)
+        {
+            this.Action = action;
+            this.card = card;
+            this.Affected = SetAffected(card.Owner, card.Enemy, NextWord());
+            this.NotAffected = NotAffected();
+
+        }
+        public void Actions(string expression)
+        {
+            switch(NextWord(Action))
+            {
+                case "Attack":
+                    break;
+                case "Cure":
+                    new Cure().Effect();
+                    break;
+                case "Draw":
+                    new Draw().Effect();
+                    break;
+                case "Remove":
+                    break;
+                case "Defense":
+                    break;
+                case "State":
+                    break;
+            }
+        }
+        public string NextWord(string expression)
+        {
+            for (var i = 0; i < expression.Length; i++)
+            {
+                if(expression[i]=='.')
+                {
+                    string word = expression.Substring(0, i);
+                    this.Action = this.Action.Remove(action + ".");
+                    return word;
+                }
+            }
+            return "";
+        }
+        public void SetAffected(string player)
+        {
+            if (player == "Owner")
+            {
+                this.Affected = card.Owner;
+            }
+            else
+            {
+                this.Affected = card.Enemy;
+            }
+        }
+        public  void SetNotAffected()
+        {
+            foreach (var player in Game.PlayersInventary)
+            {
+                if (player != this.Affected)
+                {
+                    this.notAffected = player;
+                    return;
+                }
+            }
+            throw(new Exception("Error in Actions.SetEnemy()"));
+        }
+        public double setFactor()
+        {
+            switch (this.Action)
+            {
+                case "EnemyHand":
+                    return  this.card.Enemy.hand.Count();
+                case "OwnerHand":
+                    return this.card.Owner.hand.Count();
+                case "EnemyBattleField":
+                    return this.card.Enemy.userBattleField.Length;
+                case "OwnerBattleField":
+                    return this.card.Owner.userBattleField.Length;
+                case "Graveyard":
+                    return Game.GraveYard.Count();
+                default:
+                    return 1;
+            }
+            return 1;
+        } 
+        
+        void InterpretExpression(string action, Relics card)
+        { 
+            for (var i = 0; i < action.Length; i++)
+            {
+                string actualAction = "";
+                int start = 0;
+                int end = 0;
+                if(action[i]=='(')
+                {
+                    start = i+1;
+                }
+                if(action[i] == ')')
+                {
+                    end = i-1;
+                    new InterpetAction(action.Substring(start, end-start), card).Actions();
+                }
+            }
+        }
+    }
+    class Cure: InterpetAction
+    {
+        int vida = 1;
+        int factor =1;
+        public Cure()
+        {
+            this.vida = int.Parse(NextWord(this.Action));
+            if(NextWord(this.Action) != "")
+            {
+                this.factor = setFactor();
+            }
+        }
+        void Effect()
+        {
+            Affected.life = vida * factor;
+        }
+    }
+    class Draw:InterpetAction
+    {
+        public void Effect()
+        {
+            switch(NextWord(this.Action))
+            {
+                case "EnemyHand":
+                    return NextDraw(card.Enemy.hand);
+                case "EnemyBattleField":
+                    return NextDraw(card.Enemy.userBattleField.ToList());
+                case "OwnerBattleField":
+                    return NextDraw(card.Owner.userBattleField.ToList());
+                case "Graveyard":
+                    return NextDraw(Game.GraveYard);
+                default:
+                    return 1;
+            }
+        }
+        public void NextDraw(List<Relics> place)
+        {
+
+        }
+    }
 }

@@ -67,7 +67,7 @@
             }
             throw(new Exception("Error in Actions.SetEnemy()"));
         }
-    
+        
         public double setFactor(int effect, Player player, Player enemy)
         {
             double factor = 1;
