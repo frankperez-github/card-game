@@ -22,9 +22,8 @@ namespace card_gameProtot
             PlayersInventary.Add(player2);
 
             int turn = 1;
-            Dictionary<int, Relics> CardsInventary = Program.CardsInventary;
+            List<Relics> CardsInventary = Program.CardsInventary;
             // List<int> Deck = CargarDeck(CardsInventary);
-
 
             player1.TakeFromDeck(player1, player2, 5, new List<Relics>());
             player2.TakeFromDeck(player2, player1, 5, new List<Relics>());
@@ -121,18 +120,18 @@ namespace card_gameProtot
                 {
                     if (player.userBattleField[index].activeDuration == 1)
                     {
-                        foreach (var effect in player.userBattleField[index].EffectsOrder)
-                        {
-                            if(effect.Key == 5)
-                            {
-                                effect.Value.affects = effect.Value.affects*(-1); 
-                                player.userBattleField[index].Effect();
-                            }
-                            else if(effect.Key == 8)
-                            {
-                                player.userBattleField[index].Affected.state = State.Safe;
-                            }
-                        }
+                        // foreach (var effect in player.userBattleField[index].EffectsOrder)
+                        // {
+                        //     if(effect.Key == 5)
+                        //     {
+                        //         effect.Value.affects = effect.Value.affects*(-1); 
+                        //         player.userBattleField[index].Effect();
+                        //     }
+                        //     else if(effect.Key == 8)
+                        //     {
+                        //         player.userBattleField[index].Affected.state = State.Safe;
+                        //     }
+                        // }
                         GraveYard.Add(player.userBattleField[index]); 
                         player.userBattleField[index] = null; // Removing card from battelfield
                     }
@@ -171,13 +170,13 @@ namespace card_gameProtot
                 player.printInfo();
                 Console.WriteLine("Elige la carta que quieres activar");
                 int HandPosition = int.Parse(Console.ReadLine());
-                foreach (var effect in player.hand[HandPosition].EffectsOrder)
-                {
-                    if (effect.Key == 4)
-                    {
-                        effect.Value.affects = attack*-1;
-                    }
-                }
+                // foreach (var effect in player.hand[HandPosition].EffectsOrder)
+                // {
+                //     if (effect.Key == 4)
+                //     {
+                //         effect.Value.affects = attack*-1;
+                //     }
+                // }
                 player.hand[HandPosition].Effect();
                 player.userBattleField.ToList().Add(player.hand[HandPosition]);
                 player.hand[HandPosition].cardState = CardState.Activated;

@@ -2,7 +2,7 @@ namespace card_gameProtot
 {
     public class Program
     {
-        public static Dictionary<int, Relics> CardsInventary= new Dictionary<int, Relics>();
+        public static List<Relics> CardsInventary= new List<Relics>();
         public static Dictionary<int, Character> CharactersInventary = new Dictionary<int, Character>();
         public static void Main(string[] args)
         {
@@ -16,63 +16,38 @@ namespace card_gameProtot
 
 
             Player defaultPlayer = new Player(CharactersInventary[1], "default");
-            
+
             //Espada del Destino
             //Te suma 15 de ataque
-            Dictionary<int, ActionInfo> card1Dict = new Dictionary<int, ActionInfo>();
-            ActionInfo card1Info = new ActionInfo(relativePlayer.Owner, 15);
-            card1Dict.Add(5, card1Info);
-            CardsInventary.Add(1, new Relics(defaultPlayer, defaultPlayer, 1, "Espada del destino", 0, 3, "img", false, "", "damage", card1Dict));
+            CardsInventary.Add(new Relics(defaultPlayer, defaultPlayer, 1, "Espada del destino", 0, 3, "img", false, "", "damage", "(Owner.Attack.15)"));
 
             //Capsula del Tiempo
             //Roba una carta del cementerio
-            Dictionary<int, ActionInfo> card2Dict = new Dictionary<int, ActionInfo>();
-            ActionInfo card2Info = new ActionInfo(relativePlayer.Owner, 1,"graveyard.random.1");
-            card2Dict.Add(3, card2Info);
-            CardsInventary.Add(2,new Relics(defaultPlayer, defaultPlayer, 2, "Capsula del Tiempo", 0, 1, "imgpath2", false, "", "draw", card2Dict));
+            CardsInventary.Add(new Relics(defaultPlayer, defaultPlayer, 2, "Capsula del Tiempo", 0, 1, "imgpath2", false, "", "draw", "(Owner.Draw.EnemyHand.1)"));
 
             //Anillo de Zeus
             //Ganas 5 de vida por cada carta en tu mano
-            Player defaultPlayer1 = new Player(CharactersInventary[1], "pepito");
-            Dictionary<int, ActionInfo> card3Dict = new Dictionary<int, ActionInfo>();
-            ActionInfo card3Info = new ActionInfo(relativePlayer.Owner, 5, 1, relativeFactor.OwnerHand);
-            card3Dict.Add(4, card3Info);
-            CardsInventary.Add(3 ,new Relics(defaultPlayer1, defaultPlayer, 3, "Anillo de Zeus", 0, 1, "imgpath3", false,  "", "cure", card3Dict));
+            CardsInventary.Add(new Relics(defaultPlayer, defaultPlayer, 3, "Anillo de Zeus", 0, 1, "imgpath3", false, "",  "cure", "(Owner.Cure.5.OwnerHand)"));
 
             //Escudo de la pobreza
             //Trap, evita el 50% del daño del enemigo
-            Dictionary<int, ActionInfo> card4Dict = new Dictionary<int, ActionInfo>();
-            ActionInfo card4Info = new ActionInfo(relativePlayer.Owner, 1, 0.5, relativeFactor.Fixed);
-            card4Dict.Add(4, card4Info);
-            CardsInventary.Add(4,new Relics(defaultPlayer, defaultPlayer, 4, "Escudo de la pobreza", 0, 1, "imgpath", true, "", "defense", card4Dict));
+            CardsInventary.Add(new Relics(defaultPlayer, defaultPlayer, 4, "Escudo de la pobreza", 0, 1, "imgpath", true, "", "defense", "(Owner.Defense.1.0,5)"));
 
             //Libro de los secretos 
             //Robas 2 cartas del deck
-            Dictionary<int, ActionInfo> card5Dict = new Dictionary<int, ActionInfo>();
-            ActionInfo card5Info = new ActionInfo(2, "deck");
-            card5Dict.Add(1, card5Info);
-            CardsInventary.Add(5,new Relics(defaultPlayer, defaultPlayer, 5, "Libro de los secretos", 0, 1, "imgpath4", false, "", "draw", card5Dict));
+            CardsInventary.Add(new Relics(defaultPlayer, defaultPlayer, 5, "Libro de los secretos", 0, 1, "imgpath4", false, "", "draw", "(Owner.Draw.Deck.random.2)"));
             
-            //Caliz de la Venganza
-            //Tu adversario descarta 2 cartas de su mano
-            Dictionary<int, ActionInfo> card6Dict = new Dictionary<int, ActionInfo>();
-            ActionInfo card6Info = new ActionInfo(relativePlayer.Enemy, 2, "hand.random.2");
-            card6Dict.Add(7, card6Info);
-            CardsInventary.Add(6,new Relics(defaultPlayer, defaultPlayer, 6, "Caliz de la Venganza", 0, 1, "imgpath4", false, "", "draw", card6Dict));
+            // //Caliz de la Venganza
+            // //Tu adversario descarta 2 cartas de su mano
+            CardsInventary.Add(new Relics(defaultPlayer, defaultPlayer, 6, "Caliz de la Venganza", 0, 1, "imgpath4", false, "", "draw", "(Enemy.Remove.EnemyHand.2)"));
 
             //Resfriado
             //El adversario queda congelado por 2 turnos
-            Dictionary<int, ActionInfo> card7Dict = new Dictionary<int, ActionInfo>();
-            ActionInfo card7Info = new ActionInfo(relativePlayer.Enemy, State.Freezed);
-            card7Dict.Add(8, card7Info);
-            CardsInventary.Add(7,new Relics(defaultPlayer, defaultPlayer, 7, "Resfriado", 1, 2, "imgpath4", false, "", "state", card7Dict));
+            CardsInventary.Add(new Relics(defaultPlayer, defaultPlayer, 7, "Resfriado", 1, 2, "imgpath4", false, "", "state", "(Enemy.ChangeState.Freezed)"));
 
-            //Objetivo enemigo
-            //Destruye 1 reliquia que tenga activa enemigo
-            Dictionary<int, ActionInfo> card8Dict = new Dictionary<int, ActionInfo>();
-            ActionInfo card8Info = new ActionInfo(relativePlayer.Enemy, 1, "battlefield.random.1");
-            card8Dict.Add(9, card8Info);
-            CardsInventary.Add(8,new Relics(defaultPlayer, defaultPlayer, 8, "Objetivo Enemigo", 0, 1, "imgpath4", false, "", "trap", card8Dict));
+            // //Objetivo enemigo
+            // //Destruye 1 reliquia que tenga activa enemigo
+            CardsInventary.Add(new Relics(defaultPlayer, defaultPlayer, 8, "Objetivo Enemigo", 0, 1, "imgpath4", false, "", "trap", "(Enemy.Remove.EnemyBattlefield.Battlefield.random.1)"));
             
             Game.game();
         }

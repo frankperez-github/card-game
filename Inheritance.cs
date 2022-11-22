@@ -27,21 +27,21 @@
         public Player notAffected;
         public string condition = "";
         public string type = ""; 
-        public Dictionary<int, ActionInfo> EffectsOrder = new Dictionary<int, ActionInfo>();
+        public string effect = "";
         public bool isTrap;
         public CardState cardState = CardState.OnDeck;
 
-        public Relics(Player Owner, Player Enemy, int id, string Name, int passiveDuration, int activeDuration, string imgAddress, bool isTrap, string condition, string type, Dictionary<int, ActionInfo> EffectsOrder) 
+        public Relics(Player Owner, Player Enemy, int id, string Name, int passiveDuration, int activeDuration, string imgAddress, bool isTrap, string condition, string type, string effect)
                       : base (Name, passiveDuration, activeDuration, imgAddress)
         {
             this.Owner = Owner;
             this.Enemy = Enemy;
             this.id = id;
-            this.EffectsOrder = EffectsOrder;
             this.cardState = CardState.OnHand;
             this.isTrap = isTrap;
             this.type= type;
             this.condition = condition;
+            this.effect = effect;
         }
 
         public void SetPlayer(Player Owner, Player Enemy, relativePlayer relativePlayer)
@@ -68,32 +68,32 @@
             throw(new Exception("Error in Actions.SetEnemy()"));
         }
         
-        public double setFactor(int effect, Player player, Player enemy)
-        {
-            double factor = 1;
-            switch (this.EffectsOrder[effect].relativeFactor)
-            {
-                case relativeFactor.EnemyHand:
-                    return  this.EffectsOrder[effect].factor * enemy.getCardType(CardState.OnHand);
+        // public double setFactor(int effect, Player player, Player enemy)
+        // {
+        //     double factor = 1;
+        //     switch (this.EffectsOrder[effect].relativeFactor)
+        //     {
+        //         case relativeFactor.EnemyHand:
+        //             return  this.EffectsOrder[effect].factor * enemy.getCardType(CardState.OnHand);
 
-                case relativeFactor.OwnerHand:
-                    return this.EffectsOrder[effect].factor * player.getCardType(CardState.OnHand);
+        //         case relativeFactor.OwnerHand:
+        //             return this.EffectsOrder[effect].factor * player.getCardType(CardState.OnHand);
 
-                case relativeFactor.EnemyBattleField:
-                    return this.EffectsOrder[effect].factor * enemy.getCardType(CardState.Activated);
+        //         case relativeFactor.EnemyBattleField:
+        //             return this.EffectsOrder[effect].factor * enemy.getCardType(CardState.Activated);
 
-                case relativeFactor.OwnerBattleField:
-                    return this.EffectsOrder[effect].factor * player.getCardType(CardState.Activated);
+        //         case relativeFactor.OwnerBattleField:
+        //             return this.EffectsOrder[effect].factor * player.getCardType(CardState.Activated);
                 
-                case relativeFactor.Graveyard:
-                    return this.EffectsOrder[effect].factor * (player.getCardType(CardState.OnGraveyard) + enemy.getCardType(CardState.OnGraveyard));
+        //         case relativeFactor.Graveyard:
+        //             return this.EffectsOrder[effect].factor * (player.getCardType(CardState.OnGraveyard) + enemy.getCardType(CardState.OnGraveyard));
                 
-                default:
-                    factor = this.EffectsOrder[effect].factor;
-                    break;
-            }
-            return factor;
-        } 
+        //         default:
+        //             factor = this.EffectsOrder[effect].factor;
+        //             break;
+        //     }
+        //     return factor;
+        // } 
         public  void AddtoBattleField()
         {
             for (int i = 0; i < Owner.userBattleField.Length; i++)
@@ -111,58 +111,60 @@
         {
             if (condition == "" || new BoolEx(this.condition, Owner, Enemy).ScanExpression())
             {
-                foreach(var Effect in EffectsOrder)
-                {
+                AddtoBattleField();
+                InterpretAction.InterpretExpression(effect, this);
+                // foreach(var Effect in EffectsOrder)
+                // {
                     
-                    this.cardState = CardState.Activated;
-                    AddtoBattleField();
-                    SetPlayer(Owner, Enemy, Effect.Value.relativePlayer);
-                    SetEnemy();
-                    List<Relics> affectedCards = new InterpreterList().FullList(Effect.Value.CardList, this.Affected);
-                    double actualFactor;
+                //     this.cardState = CardState.Activated;
+                //     AddtoBattleField();
+                //     SetPlayer(Owner, Enemy, Effect.Value.relativePlayer);
+                //     SetEnemy();
+                //     List<Relics> affectedCards = new InterpreterList().FullList(Effect.Value.CardList, this.Affected);
+                //     double actualFactor;
 
-                    switch (Effect.Key)
-                    {
-                        case 1:
-                            TakeFromDeck(this.Affected, this.notAffected, Effect.Value.affects, affectedCards);
-                            break;
+                //     switch (Effect.Key)
+                //     {
+                //         case 1:
+                //             TakeFromDeck(this.Affected, this.notAffected, Effect.Value.affects, affectedCards);
+                //             break;
 
-                        case 2:
-                            TakeFromEnemyHand(this.Affected, this.notAffected, Effect.Value.affects);
-                            break;
+                //         case 2:
+                //             TakeFromEnemyHand(this.Affected, this.notAffected, Effect.Value.affects);
+                //             break;
 
-                        case 3:
-                            TakeFromGraveyard(this.Affected, this.notAffected, Effect.Value.affects, affectedCards);
-                            break;
+                //         case 3:
+                //             TakeFromGraveyard(this.Affected, this.notAffected, Effect.Value.affects, affectedCards);
+                //             break;
 
-                        case 4:
-                            actualFactor = setFactor(Effect.Key, this.Affected, this.notAffected);
-                            Life(this.Affected, Effect.Value.affects, actualFactor);
-                            break;
+                //         case 4:
+                //             actualFactor = setFactor(Effect.Key, this.Affected, this.notAffected);
+                //             Life(this.Affected, Effect.Value.affects, actualFactor);
+                //             break;
 
-                        case 5:
-                            actualFactor = setFactor(Effect.Key, this.Affected, this.notAffected);
-                            Attack(this.Affected, Effect.Value.affects,  actualFactor);
-                            break;
+                //         case 5:
+                //             actualFactor = setFactor(Effect.Key, this.Affected, this.notAffected);
+                //             Attack(this.Affected, Effect.Value.affects,  actualFactor);
+                //             break;
 
-                        case 6:
-                            actualFactor = setFactor(Effect.Key, this.Affected, this.notAffected);
-                            Defense(this.Affected, Effect.Value.affects, actualFactor);
-                            break;
+                //         case 6:
+                //             actualFactor = setFactor(Effect.Key, this.Affected, this.notAffected);
+                //             Defense(this.Affected, Effect.Value.affects, actualFactor);
+                //             break;
                         
-                        case 7:
-                            actualFactor = setFactor(Effect.Key, this.Affected, this.notAffected);
-                            Discard(this.Affected, Effect.Value.affects, actualFactor, affectedCards);
-                            break;
+                //         case 7:
+                //             actualFactor = setFactor(Effect.Key, this.Affected, this.notAffected);
+                //             Discard(this.Affected, Effect.Value.affects, actualFactor, affectedCards);
+                //             break;
 
-                        case 8:
-                            ChangePlayerState(this.Affected, Effect.Value.state);
-                            break;
-                        case 9:
-                            RemoveFromBattleField(this.Affected, affectedCards);
-                            break;
-                    }
-                }
+                //         case 8:
+                //             ChangePlayerState(this.Affected, Effect.Value.state);
+                //             break;
+                //         case 9:
+                //             RemoveFromBattleField(this.Affected, affectedCards);
+                //             break;
+                //     }
+                // }
 
             }
         }
