@@ -30,11 +30,11 @@ namespace card_gameProtot
             CardsInventary.Add(new Relics(defaultPlayer, defaultPlayer, 3, "Anillo de Zeus", 0, 1, "imgpath3", false, "",  "cure", 
             @"if (Enemy.Life)=(100)\n
             {\n
-                if (Owner.Defense)=(5)\n
+                if (Owner.Defense)=(3)\n
                 {\n
                     (Owner.Cure.5.OwnerHand)\n
                 }\n
-                else\n
+                else if (Enemy.Life)=(100)\n
                 {\n
                     (Owner.Cure.100)\n
                 }\n

@@ -37,9 +37,7 @@ namespace card_gameProtot
             }
             if (expression[index].Contains("if ("))
             {
-
                 string condition = expression[index].Substring(expression[index].IndexOf("("), expression[index].Length -2 - expression[index].IndexOf("("));
-                
                 if (new BoolEx(condition, Owner, Enemy, this.Relic).ScanExpression())
                 {
                     Scan(expression, index+1);
@@ -68,6 +66,7 @@ namespace card_gameProtot
                             if(expression[i].Contains("else if ("))
                             {
                                 expression[i] = expression[i].Replace("else ", "");
+                                Console.WriteLine(expression[i]);
                                 Scan(expression, i);
                                 break;
                             }
@@ -658,9 +657,9 @@ namespace card_gameProtot
         {
             this.vida = int.Parse(NextWord(this.Action));
             this.factor = 1;
-            this.Action = this.Action.Replace(NextWord(action) + ".", "");
             if (this.Action.Contains("."))
-            {
+            {   
+                this.Action = this.Action.Replace(NextWord(action) + ".", "");
                 if (IsDigit(this.Action))
                 {
                     factor = int.Parse(this.Action);
@@ -673,6 +672,8 @@ namespace card_gameProtot
         }
         public void Effect()
         {
+            Console.WriteLine(vida + "  " + factor);
+            Console.ReadKey();
             Affected.life += vida * factor;
         }
     }
@@ -684,9 +685,9 @@ namespace card_gameProtot
         {
             this.damage = int.Parse(NextWord(this.Action));
             this.factor = 1;
-            this.Action = this.Action.Replace(NextWord(action) + ".", "");
             if (this.Action.Contains("."))
             {
+                this.Action = this.Action.Replace(NextWord(action) + ".", "");
                 if (IsDigit(this.Action))
                 {
                     factor = int.Parse(this.Action);
@@ -855,9 +856,9 @@ namespace card_gameProtot
         {
             this.defense = int.Parse(NextWord(this.Action));
             this.factor = 1;
-            this.Action = this.Action.Replace(NextWord(action) + ".", "");
             if (this.Action.Contains("."))
             {
+                this.Action = this.Action.Replace(NextWord(action) + ".", "");
                 if (IsDigit(NextWord(this.Action)))
                 {
                     factor = double.Parse(this.Action);
