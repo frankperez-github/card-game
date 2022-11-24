@@ -27,6 +27,7 @@
         public string effect{get;}
         public bool isTrap{get;}
         public string description{get;}
+        public List<InterpretAction> Actions;
         public CardState cardState = CardState.OnDeck;
 
         public Relics(Player Owner, Player Enemy, int id, string Name, int passiveDuration, int activeDuration, string imgAddress, bool isTrap, string type, string effect, string description)
@@ -40,7 +41,7 @@
             this.type= type;
             this.effect = effect;
             this.description = description;
-
+            this.Actions = new List<InterpretAction>();
         }
         public void Effect()
         {
@@ -152,7 +153,7 @@
             
             Player Affected = SetAffected(Edit.NextWord(actualAction));
             Player NotAffected = SetNotAffected(Affected);
-            Actions(actualAction, Affected, NotAffected);
+            Action(actualAction, Affected, NotAffected);
         
         }
         public Player SetAffected(string player)
@@ -170,32 +171,46 @@
         {
             return Affected.Enemy;
         }
-        public void Actions(string expression, Player Affected, Player NotAffected)
+        public void Action(string expression, Player Affected, Player NotAffected)
         {
             EditExpression Edit = new EditExpression();
             expression = Edit.CutExpression(expression);
             switch (Edit.NextWord(expression))
             {
                 case "Attack":
-                    new Attack(Edit.CutExpression(expression), this, Affected, NotAffected, this.Owner, this.Enemy).Effect();
+                    Attack Attack = new Attack(Edit.CutExpression(expression), this, Affected, NotAffected, this.Owner, this.Enemy);
+                    Attack Negate = new Attack("-" + Edit.CutExpression(expression), this, Affected, NotAffected, this.Owner, this.Enemy);
+                    this.Actions.Add(Negate);
+                    Attack.Effect();
                     break;
                 case "Cure":
-                    new Cure(Edit.CutExpression(expression), this, Affected, NotAffected, this.Owner, this.Enemy).Effect();
+                    Cure Cure = new Cure(Edit.CutExpression(expression), this, Affected, NotAffected, this.Owner, this.Enemy);
+                    this.Actions.Add(Cure);
+                    Cure.Effect();
                     break;
                 case "Draw":
-                    new Draw(Edit.CutExpression(expression), this, Affected, NotAffected, this.Owner, this.Enemy).Effect();
+                    Draw Draw = new Draw(Edit.CutExpression(expression), this, Affected, NotAffected, this.Owner, this.Enemy);
+                    this.Actions.Add(Draw);
+                    Draw.Effect();
                     break;
                 case "Remove":
-                    new Remove(Edit.CutExpression(expression), this, Affected, NotAffected, this.Owner, this.Enemy).Effect();
+                    Remove Remove = new Remove(Edit.CutExpression(expression), this, Affected, NotAffected, this.Owner, this.Enemy);
+                    this.Actions.Add(Remove);
+                    Remove.Effect();
                     break;
                 case "Defense":
-                    new Defense(Edit.CutExpression(expression), this, Affected, NotAffected, this.Owner, this.Enemy).Effect();
+                    Defense Defense = new Defense(Edit.CutExpression(expression), this, Affected, NotAffected, this.Owner, this.Enemy);
+                    this.Actions.Add(Defense);
+                    Defense.Effect();
                     break;
                 case "ChangeState":
-                    new ChangeState(Edit.CutExpression(expression), this, Affected, NotAffected, this.Owner, this.Enemy);
+                    ChangeState ChangeState = new ChangeState(Edit.CutExpression(expression), this, Affected, NotAffected, this.Owner, this.Enemy);
+                    this.Actions.Add(ChangeState);
                     break;
                 case "Show":
-                    new Show(Edit.CutExpression(expression), this, Affected, NotAffected, this.Owner, this.Enemy).Effect();
+                    Show Show = new Show(Edit.CutExpression(expression), this, Affected, NotAffected, this.Owner, this.Enemy);
+                    this.Actions.Add(Show);
+                    Show.Effect();
                     break;
             }
         }

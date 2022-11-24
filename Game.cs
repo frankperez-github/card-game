@@ -104,7 +104,7 @@ namespace card_gameProtot
                 turn++; 
             }
         }
-        //We need to change enemy player state 
+        //We need to change enemy player state
         public void UpdateBattleField(Player player)
         {
             for (int index = 0; index < player.userBattleField.Length; index++)
@@ -113,18 +113,13 @@ namespace card_gameProtot
                 {
                     if (player.userBattleField[index].activeDuration == 1)
                     {
-                        // foreach (var effect in player.userBattleField[index].EffectsOrder)
-                        // {
-                        //     if(effect.Key == 5)
-                        //     {
-                        //         effect.Value.affects = effect.Value.affects*(-1); 
-                        //         player.userBattleField[index].Effect();
-                        //     }
-                        //     else if(effect.Key == 8)
-                        //     {
-                        //         player.userBattleField[index].Affected.state = State.Safe;
-                        //     }
-                        // }
+                        foreach (var Action in player.userBattleField[index].Actions)
+                        {
+                            if(Action.GetType().ToString() == "card_gameProtot.Attack")
+                            {
+                                Action.Effect();
+                            }
+                        }
                         GraveYard.Add(player.userBattleField[index]); 
                         player.userBattleField[index] = null; // Removing card from battelfield
                     }

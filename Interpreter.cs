@@ -1,7 +1,7 @@
 namespace card_gameProtot
 {
     using System.Text.RegularExpressions;
-    class EditExpression
+    public class EditExpression
     {
         public bool IsDigit(string expression)
         {
@@ -38,7 +38,7 @@ namespace card_gameProtot
             }
         }
     }
-    abstract class Expression : EditExpression
+    public abstract class Expression : EditExpression
     {
         public string expressionA = "";
         public Player Owner;
@@ -318,7 +318,7 @@ namespace card_gameProtot
     }
 
 
-    class InterpreterList
+    public class InterpreterList
     {
         public string condition;
         InterpretAction action; 
@@ -443,7 +443,7 @@ namespace card_gameProtot
     }
 
 
-    class InterpretAction : Expression
+    public class InterpretAction : Expression
     {
         public Player Affected;
         public Player NotAffected;
@@ -473,6 +473,7 @@ namespace card_gameProtot
                     return 1;
             }
         }
+        public virtual void Effect(){} 
     }
     class Cure : InterpretAction
     {
@@ -496,7 +497,7 @@ namespace card_gameProtot
                 }
             }
         }
-        public void Effect()
+        public override void Effect()
         {
             Affected.life += vida * factor;
         }
@@ -522,7 +523,7 @@ namespace card_gameProtot
                 }
             }
         }
-        public void Effect()
+        public override void Effect()
         {
 
             Affected.character.attack += damage * factor;
@@ -532,7 +533,7 @@ namespace card_gameProtot
     {
         public int cards = 1;
         public Draw(string action, Relics Relic, Player Affected, Player NotAffected, Player Owner, Player Enemy) : base(action, Relic, Affected, NotAffected, Owner, Enemy){}
-        public void Effect()
+        public override void Effect()
         {
             List<Relics> affectedCards;
             string Place = NextWord(this.expressionA);
@@ -693,7 +694,7 @@ namespace card_gameProtot
                 }
             }
         }
-        public void Effect()
+        public override void Effect()
         {
             Affected.character.defense += defense * factor;
         }
@@ -723,7 +724,7 @@ namespace card_gameProtot
     {
         public Remove(string action, Relics Relic, Player Affected, Player NotAffected, Player Owner, Player Enemy) : base(action, Relic, Affected, NotAffected, Owner, Enemy){}
 
-        public void Effect()
+        public override void Effect()
         {
             string place = NextWord(this.expressionA);
             this.expressionA = this.expressionA.Replace(place + ".", "");
@@ -804,7 +805,7 @@ namespace card_gameProtot
     {
         int cards;
         public Show(string action, Relics Relic, Player Affected, Player NotAffected, Player Owner, Player Enemy) : base(action, Relic, Affected, NotAffected, Owner, Enemy){}
-        public void Effect()
+        public override void Effect()
         {
             string count = NextWord(this.expressionA);
             List<Relics> show = new List<Relics>();
