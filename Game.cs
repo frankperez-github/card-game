@@ -2,31 +2,34 @@ namespace card_gameProtot
 {
     public class Game
     {
-        public static List<Player> PlayersInventary = new List<Player>();
-        public static Dictionary<int, Character> CharactersInventary = Program.CharactersInventary;
-        public static List<Relics> GraveYard = new List<Relics>();
-        // public static Player player1;
-        // public static Player player2;
-        public static void game()
+        Player player1{get;}
+        Player player2{get;}
+        public List<Character> CharactersInventary;
+        public List<Relics> CardsInventary;
+        public List<Relics> GraveYard;
+        int turn;
+        public Game(List<Character> CharactersInventary, List<Relics> CardsInventary)
+        {
+            this.CharactersInventary = CharactersInventary;
+            this.CardsInventary = CardsInventary;
+            GraveYard = new List<Relics>();
+            this.player1 = new Player(CharactersInventary[0], "Player1");
+            this.player2 = new Player(CharactersInventary[0], "Player2");
+            player1.SetAux(player2, this);
+            player2.SetAux(player1, this);
+            turn = 1;
+        }
+
+        public void game()
         {
             Console.Clear();
             Console.WriteLine("Elige el personaje que seras");
-            Character character1 = CharactersInventary[int.Parse(Console.ReadLine())];
+            player1.character = CharactersInventary[int.Parse(Console.ReadLine())];
             Console.WriteLine("Elige el personaje que sera tu oponente");
-            Character character2 = CharactersInventary[int.Parse(Console.ReadLine())];
+            player2.character = CharactersInventary[int.Parse(Console.ReadLine())];
 
-
-            Player player1 = new Player(character1, "Player1");
-            Player player2 = new Player(character2, "Player2");
-            PlayersInventary.Add(player1);
-            PlayersInventary.Add(player2);
-
-            int turn = 1;
-            List<Relics> CardsInventary = Program.CardsInventary;
-            // List<int> Deck = CargarDeck(CardsInventary);
-
-            player1.TakeFromDeck(player1, player2, 5, new List<Relics>());
-            player2.TakeFromDeck(player2, player1, 5, new List<Relics>());
+            player1.TakeFromDeck(5);
+            player2.TakeFromDeck(5);
             
             Console.Clear();
             while (player1.life > 0 && player2.life > 0)
@@ -36,7 +39,7 @@ namespace card_gameProtot
 
                 if (turn % 2 != 0) //Impar
                 {
-                    player1.TakeFromDeck(player1, player2, 1, new List<Relics>());                    
+                    player1.TakeFromDeck(1);                    
                     
                     //All activity of player 1 goes here 
                     int Option = 0;
@@ -68,7 +71,7 @@ namespace card_gameProtot
 
                 if (turn % 2 == 0) //Par
                 {
-                    player2.TakeFromDeck(player2, player1, 1, new List<Relics>());
+                    player2.TakeFromDeck(1);
                     player2.printInfo();
 
                     //All activity of player 2 goes here 
@@ -101,18 +104,8 @@ namespace card_gameProtot
                 turn++; 
             }
         }
-        public static List<int> CargarDeck(Dictionary<int, Relics> CardsInventary)
-        {
-            List<int> result = new List<int>();
-            foreach (var card in CardsInventary)
-            {
-                result.Add(card.Value.id);    
-            }
-            //Console.WriteLine(string.Join(" ", result));
-            return result;
-        }
         //We need to change enemy player state 
-        public static void UpdateBattleField(Player player)
+        public void UpdateBattleField(Player player)
         {
             for (int index = 0; index < player.userBattleField.Length; index++)
             {
@@ -143,7 +136,7 @@ namespace card_gameProtot
                         }
                         else
                         {
-                            int Defaultpassive = Program.CardsInventary[player.userBattleField[index].id].passiveDuration;
+                            int Defaultpassive = CardsInventary[player.userBattleField[index].id].passiveDuration;
                             player.userBattleField[index].passiveDuration = Defaultpassive;
                             player.userBattleField[index].activeDuration--;
                         }
@@ -192,16 +185,16 @@ namespace card_gameProtot
         }
         public static void Attack(Player player, Player enemy)
         {
-            if(enemy.defense!=0)
+            if(enemy.character.defense!=0)
             {
                 Console.WriteLine("Desea defenderse de este ataques? 1: Si, 2: No");
                 if(int.Parse(Console.ReadLine())==1)
                 {
-                    enemy.defense--;
+                    enemy.character.defense--;
                 }
                 else
                 {
-                    enemy.life = enemy.life - player.attack;
+                    enemy.life = enemy.life - player.character.attack;
                 }
             }
             else if(enemy.Trap())
@@ -209,11 +202,11 @@ namespace card_gameProtot
                 Console.WriteLine("Desea activar una carta trampa? 1: Si, 2: No");
                 if(int.Parse(Console.ReadLine())==1)
                 {
-                    ActivateTrapCards(enemy, player.attack);
+                    ActivateTrapCards(enemy, player.character.attack);
                 }
                 else
                 {
-                    enemy.life = enemy.life - player.attack;
+                    enemy.life = enemy.life - player.character.attack;
                 }
             }
             

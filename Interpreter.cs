@@ -1,7 +1,44 @@
 namespace card_gameProtot
 {
     using System.Text.RegularExpressions;
-    class Expression
+    class EditExpression
+    {
+        public bool IsDigit(string expression)
+        {
+            Regex regex = new Regex("[0-9]");
+            if (regex.Matches(expression).Count() == expression.Length)
+            {
+                return true;
+            }
+            return false;
+        }
+        public string NextWord(string expression)
+        {
+            if(expression.Contains("("))
+            {
+                string word = expression.Substring(1, expression.IndexOf(".")-1);
+                return word;
+            }
+            if(expression.Contains("."))
+            {
+                string word = expression.Substring(0, expression.IndexOf("."));
+                return word;
+            }
+            return expression;
+        }
+        public string CutExpression(string expression)
+        {
+            if(expression.Contains("."))
+            {
+                return expression.Substring(expression.IndexOf(".")+1, (expression.Length - expression.IndexOf(".")-1));
+            }
+            else
+            {
+                return "";
+            }
+        }
+    }
+    abstract class Expression : EditExpression
     {
         public string expressionA = "";
         public Player Owner;
@@ -14,91 +51,61 @@ namespace card_gameProtot
             this.expressionA = expression;
             this.Relic = Relic;
         }
-        public bool IsDigit(string expression)
+    }
+    class ScanExpression
+    {
+        public string leftExpression{get;}
+        public string rightExpression{get;}
+        public string Operator{get;}
+        
+        public ScanExpression(string expressionA)
         {
-            Regex regex = new Regex("[0-9]");
-            if (regex.Matches(expression).Count() == expression.Length)
+            int expressionParent = 0;
+            for (int i = 0; i < expressionA.Length; i++)
             {
-                return true;
-            }
-            return false;
-        }
-        public void Scan()
-        {
-            string[] expression = this.expressionA.Split('\n');
-            Scan(expression, 0);
-        }
-        //Metodo Recursivo
-        public void Scan(string[] expression, int index)
-        {
-            if(index==expression.Length)
-            {
-                return;
-            }
-            if (expression[index].Contains("if ("))
-            {
-                string condition = expression[index].Substring(expression[index].IndexOf("("), expression[index].Length -2 - expression[index].IndexOf("("));
-                if (new BoolEx(condition, Owner, Enemy, this.Relic).ScanExpression())
+                if (expressionA[i] == '(')
                 {
-                    Scan(expression, index+1);
+                    expressionParent++;
                 }
-                else
+                if (expressionA[i] == ')')
                 {
-                    //Si la condicion es falsa revisará hasta encontrar la llave de cierre correspondiente al if
-                    for (int i = index+1; i < expression.Length; i++)
+                    expressionParent--;
+                    if (expressionParent == 0)
                     {
-                        int key = 0;
-                        if(expression[i].Contains("{"))
-                        {
-                            key++;
-                        }
-                        else if(expression[i].Contains("}"))
-                        {
-                            key--;
-                        }
-                        if(key == 0)
-                        {
-                            if(expression[i].Contains("else"))
-                            {
-                                Scan(expression, i+1);
-                                break;
-                            }
-                            if(expression[i].Contains("else if ("))
-                            {
-                                expression[i] = expression[i].Replace("else ", "");
-                                Console.WriteLine(expression[i]);
-                                Scan(expression, i);
-                                break;
-                            }
-                        }
+                        this.leftExpression = expressionA.Substring(1, i - 1);
+                        this.Operator = expressionA[i + 1] + "";
+                        this.rightExpression = expressionA.Substring(i + 2, ((expressionA.Length) - (i + 2)));
+                        break;
                     }
                 }
             }
-            else if (!expression[index].Contains("{") && !expression[index].Contains("}"))
-            {
-                InterpretAction.InterpretExpression(expression[index], Relic);
-                Scan(expression, index+1);
-            }    
-            //Si no es un if ni una accion es una llave y nos la saltamos
-            else Scan(expression, index+1); 
         }
     }
 
     class AlgEx : Expression
     {
         public AlgEx(string expression, Player Owner, Player Enemy, Relics relics) : base(Owner, Enemy, expression, relics){}
-        public int Evaluate(string leftExpression, string Operator, string rightExpression)
+        public int Evaluate()
         {
-            switch (Operator)
+            if (IsDigit(this.expressionA))
+            {
+                return int.Parse(this.expressionA);
+            }
+            ScanExpression Scan = new ScanExpression(this.expressionA);
+            if(Scan.leftExpression == null && Scan.rightExpression == null)
+            {
+                return IsVariable(this.expressionA);
+            }
+            switch (Scan.Operator)
             {
                 case "+":
-                    return new Add(leftExpression, rightExpression, Owner, Enemy, Relic).Evaluate();
+                    return new Add(Scan.leftExpression, Scan.rightExpression, Owner, Enemy, Relic).Evaluate();
                 case "-":
-                    return new Rest(leftExpression, rightExpression, Owner, Enemy, Relic).Evaluate();
+                    return new Rest(Scan.leftExpression, Scan.rightExpression, Owner, Enemy, Relic).Evaluate();
                 case "*":
-                    return new Mult(leftExpression, rightExpression, Owner, Enemy, Relic).Evaluate();
+                    return new Mult(Scan.leftExpression, Scan.rightExpression, Owner, Enemy, Relic).Evaluate();
                 case "/":
-                    return new Div(leftExpression, rightExpression, Owner, Enemy, Relic).Evaluate();
+                    return new Div(Scan.leftExpression, Scan.rightExpression, Owner, Enemy, Relic).Evaluate();
             }
             return -1;
         }
@@ -123,11 +130,11 @@ namespace card_gameProtot
             switch (expression)
             {
                 case "Attack":
-                    return (int)player.attack;
+                    return (int)player.character.attack;
                 case "Life":
                     return (int)player.life;
                 case "Defense":
-                    return (int)player.defense;
+                    return (int)player.character.defense;
                 case "Hand":
                     return (int)player.hand.Count();
                 case "State":
@@ -143,49 +150,7 @@ namespace card_gameProtot
             }
             return -1;
         }
-        public int ScanExpression()
-        {
-            string input = expressionA;
-            string leftExpression = "";
-            string rightExpression = "";
-            string Operator = "=";
-            int expressionParent = 0;
-            if (IsDigit(this.expressionA))
-            {
-                return int.Parse(this.expressionA);
-            }
-            for (int i = 0; i < input.Length; i++)
-            {
-                if ((expressionParent == 0) && (input[i] == '+' || input[i] == '-' || input[i] == '*' || input[i] == '/'))
-                {
-                    leftExpression = input.Substring(0, i);
-                    Operator = input[i] + "";
-                    if (input[i + 1] == '(')
-                    {
-                        rightExpression = input.Substring(i + 2, input.Length - (i + 3));
-                        return Evaluate(leftExpression, Operator, rightExpression);
-                    }
-                    rightExpression = input.Substring(i + 1, (input.Length) - (i + 1));
-                    return Evaluate(leftExpression, Operator, rightExpression);
-                }
-                if (input[i] == '(')
-                {
-                    expressionParent++;
-                }
-                if (input[i] == ')')
-                {
-                    expressionParent--;
-                    if (expressionParent == 0)
-                    {
-                        leftExpression = input.Substring(1, i - 1);
-                        Operator = input[i + 1] + "";
-                        rightExpression = input.Substring(i + 2, ((input.Length) - (i + 2)));
-                        return Evaluate(leftExpression, Operator, rightExpression);
-                    }
-                }
-            }
-            return IsVariable(this.expressionA);
-        }
+        
     }
     class Add : AlgEx
     {
@@ -198,7 +163,7 @@ namespace card_gameProtot
         }
         public int Evaluate()
         {
-            return new AlgEx(leftExpression, Owner, Enemy, Relic).ScanExpression() + new AlgEx(rightExpression, Owner, Enemy, Relic).ScanExpression();
+            return new AlgEx(leftExpression, Owner, Enemy, Relic).Evaluate() + new AlgEx(rightExpression, Owner, Enemy, Relic).Evaluate();
         }
     }
     class Rest : AlgEx
@@ -212,7 +177,7 @@ namespace card_gameProtot
         }
         public int Evaluate()
         {
-            return new AlgEx(leftExpression, Owner, Enemy, Relic).ScanExpression() - new AlgEx(rightExpression, Owner, Enemy, Relic).ScanExpression();
+            return new AlgEx(leftExpression, Owner, Enemy, Relic).Evaluate() - new AlgEx(rightExpression, Owner, Enemy, Relic).Evaluate();
         }
     }
     class Mult : AlgEx
@@ -226,7 +191,7 @@ namespace card_gameProtot
         }
         public int Evaluate()
         {
-            return new AlgEx(leftExpression, Owner, Enemy, Relic).ScanExpression() * new AlgEx(rightExpression, Owner, Enemy, Relic).ScanExpression();
+            return new AlgEx(leftExpression, Owner, Enemy, Relic).Evaluate() * new AlgEx(rightExpression, Owner, Enemy, Relic).Evaluate();
         }
     }
     class Div : AlgEx
@@ -240,78 +205,31 @@ namespace card_gameProtot
         }
         public int Evaluate()
         {
-            return new AlgEx(leftExpression, Owner, Enemy, Relic).ScanExpression() / new AlgEx(rightExpression, Owner, Enemy, Relic).ScanExpression();
+            return new AlgEx(leftExpression, Owner, Enemy, Relic).Evaluate() / new AlgEx(rightExpression, Owner, Enemy, Relic).Evaluate();
         }
     }
 
 
     class BoolEx : Expression
     {
-        public BoolEx(string expression, Player Owner, Player Enemy, Relics relics) : base(Owner, Enemy, expression, relics)
+        public BoolEx(string expression, Player Owner, Player Enemy, Relics relics) : base(Owner, Enemy, expression, relics){}
+        public bool Evaluate()
         {
-        }
-        public virtual bool Evaluate(string leftExpression, string Operator, string rightExpression)
-        {
-            switch (Operator)
+            ScanExpression Scan = new ScanExpression(this.expressionA);
+            switch (Scan.Operator)
             {
                 case "y":
-                    return new And(leftExpression, rightExpression, Owner, Enemy, Relic).Evaluate();
+                    return new And(Scan.leftExpression, Scan.rightExpression, Owner, Enemy, Relic).Evaluate();
                 case "o":
-                    return new Or(leftExpression, rightExpression, Owner, Enemy, Relic).Evaluate();
+                    return new Or(Scan.leftExpression, Scan.rightExpression, Owner, Enemy, Relic).Evaluate();
                 case "=":
-                    return new Equal(leftExpression, rightExpression, Owner, Enemy, Relic).Evaluate();
+                    return new Equal(Scan.leftExpression, Scan.rightExpression, Owner, Enemy, Relic).Evaluate();
                 case "<":
-                    return new Less_Than(leftExpression, rightExpression, Owner, Enemy, Relic).Evaluate();
+                    return new Less_Than(Scan.leftExpression, Scan.rightExpression, Owner, Enemy, Relic).Evaluate();
                 case ">":
-                    return new Greater_Than(leftExpression, rightExpression, Owner, Enemy, Relic).Evaluate();
+                    return new Greater_Than(Scan.leftExpression, Scan.rightExpression, Owner, Enemy, Relic).Evaluate();
             }
             return false;
-        }
-        public bool ScanExpression()
-        {
-
-            string input = this.expressionA;
-            string leftExpression = "";
-            string rightExpression = "";
-            string Operator = "=";
-            int expressionParent = 0;
-            for (int i = 0; i < input.Length; i++)
-            {
-                if ((expressionParent == 0) && (input[i] == '=' || input[i] == '>' || input[i] == '<'))
-                {
-                    leftExpression = input.Substring(0, i);
-                    Operator = input[i] + "";
-                    if (input[i + 1] == '(')
-                    {
-                        rightExpression = input.Substring(i + 2, input.Length - (i + 3));
-                        break;
-                    }
-                    rightExpression = input.Substring(i + 1, (input.Length) - (i + 1));
-                    break;
-                }
-                if (input[i] == '(')
-                {
-                    expressionParent++;
-                }
-                if (input[i] == ')')
-                {
-                    expressionParent--;
-                    if (expressionParent == 0)
-                    {
-                        leftExpression = input.Substring(1, i - 1);
-                        Operator = input[i + 1] + "";
-                        if (input[i + 2] == '(')
-                        {
-                            rightExpression = input.Substring(i + 3, input.Length - (i + 5));
-                            break;
-                        }
-                        rightExpression = input.Substring(i + 2, ((input.Length) - (i + 2)));
-                        break;
-                    }
-                }
-            }
-            
-            return Evaluate(leftExpression, Operator, rightExpression);
         }
     }
     class And : BoolEx
@@ -325,8 +243,7 @@ namespace card_gameProtot
         }
         public bool Evaluate()
         {
-
-            return new BoolEx(leftExpression, Owner, Enemy, Relic).ScanExpression() && new BoolEx(rightExpression, Owner, Enemy, Relic).ScanExpression();
+            return new BoolEx(leftExpression, Owner, Enemy, Relic).Evaluate() && new BoolEx(rightExpression, Owner, Enemy, Relic).Evaluate();
         }
     }
     class Or : BoolEx
@@ -341,7 +258,7 @@ namespace card_gameProtot
 
         public bool Evaluate()
         {
-            return new BoolEx(leftExpression, Owner, Enemy, Relic).ScanExpression() || new BoolEx(rightExpression, Owner, Enemy, Relic).ScanExpression();
+            return new BoolEx(leftExpression, Owner, Enemy, Relic).Evaluate() || new BoolEx(rightExpression, Owner, Enemy, Relic).Evaluate();
         }
 
     }
@@ -356,7 +273,7 @@ namespace card_gameProtot
         }
         public bool Evaluate()
         {
-            if (new AlgEx(this.leftExpression, Owner, Enemy, Relic).ScanExpression() == new AlgEx(this.rightExpression, Owner, Enemy, Relic).ScanExpression())
+            if (new AlgEx(this.leftExpression, Owner, Enemy, Relic).Evaluate() == new AlgEx(this.rightExpression, Owner, Enemy, Relic).Evaluate())
             {
                 return true;
             }
@@ -374,7 +291,7 @@ namespace card_gameProtot
         }
         public bool Evaluate()
         {
-            if (new AlgEx(this.leftExpression, Owner, Enemy, Relic).ScanExpression() < new AlgEx(this.rightExpression, Owner, Enemy, Relic).ScanExpression())
+            if (new AlgEx(this.leftExpression, Owner, Enemy, Relic).Evaluate() < new AlgEx(this.rightExpression, Owner, Enemy, Relic).Evaluate())
             {
                 return true;
             }
@@ -392,7 +309,7 @@ namespace card_gameProtot
         }
         public bool Evaluate()
         {
-            if (new AlgEx(this.leftExpression, Owner, Enemy, Relic).ScanExpression() > new AlgEx(this.rightExpression, Owner, Enemy, Relic).ScanExpression())
+            if (new AlgEx(this.leftExpression, Owner, Enemy, Relic).Evaluate() > new AlgEx(this.rightExpression, Owner, Enemy, Relic).Evaluate())
             {
                 return true;
             }
@@ -403,8 +320,14 @@ namespace card_gameProtot
 
     class InterpreterList
     {
-        public string condition = "";
+        public string condition;
+        InterpretAction action; 
 
+        public InterpreterList(string expression, InterpretAction action)
+        {
+            condition = expression;
+            this.action = action;
+        }
         //He can ask for an specifics cards or specifics property of card  
         public List<Relics> FullList(string condition, Player player)
         {
@@ -422,11 +345,11 @@ namespace card_gameProtot
                         case "Battlefield":
                             return AddForType(condition.Substring(i + 1, condition.Length - (i + 1)), player.userBattleField.ToList());
                         case "Graveyard":
-                            return AddForType(condition.Substring(i + 1, condition.Length - (i + 1)), Game.GraveYard);
+                            return AddForType(condition.Substring(i + 1, condition.Length - (i + 1)), this.action.Affected.Game.GraveYard);
                         case "Hand":
                             return AddForType(condition.Substring(i + 1, condition.Length - (i + 1)), player.hand);
                         case "Deck":
-                            return AddForType(condition.Substring(i + 1, condition.Length - (i + 1)), Program.CardsInventary);
+                            return AddForType(condition.Substring(i + 1, condition.Length - (i + 1)), this.action.Affected.Game.CardsInventary);
                         default:
                             Console.WriteLine("Place not found xd");
                             return new List<Relics>();
@@ -520,144 +443,34 @@ namespace card_gameProtot
     }
 
 
-    class InterpretAction
+    class InterpretAction : Expression
     {
         public Player Affected;
         public Player NotAffected;
-        public string Action = "";
-        public Relics card;
-        public InterpretAction(string action, Relics card, Player Affected, Player NotAffected)
+        public InterpreterList FullList;
+        public InterpretAction(string action, Relics card, Player Affected, Player NotAffected, Player Owner, Player Enemy) : base(Owner, Enemy, action, card)
         {
-            this.Action = action;
-            this.card = card;
-            if (Affected != null)
-            {
-                this.Affected = Affected;
-                this.NotAffected = NotAffected;
-            }
-            else
-            {
-
-                this.Affected = SetAffected(NextWord(action));
-                this.Action = this.Action.Replace(NextWord(action) + ".", "");
-                this.NotAffected = SetNotAffected();
-            }
+            this.Affected = Affected;
+            this.NotAffected = NotAffected;
+            FullList = new InterpreterList(action, this);
         }
-        public void Actions(string expression)
-        {
-            switch (NextWord(Action))
-            {
-                case "Attack":
-                    new Attack(this.Action.Replace(NextWord(Action) + ".", ""), this.card, this.Affected, this.NotAffected).Effect();
-                    break;
-                case "Cure":
-                    new Cure(this.Action.Replace(NextWord(Action) + ".", ""), this.card, this.Affected, this.NotAffected).Effect();
-                    break;
-                case "Draw":
-                    new Draw(this.Action.Replace(NextWord(Action) + ".", ""), this.card, this.Affected, this.NotAffected).Effect();
-                    break;
-                case "Remove":
-                    new Remove(this.Action.Replace(NextWord(Action) + ".", ""), this.card, this.Affected, this.NotAffected).Effect();
-                    break;
-                case "Defense":
-                    new Defense(this.Action.Replace(NextWord(Action) + ".", ""), this.card, this.Affected, this.NotAffected).Effect();
-                    break;
-                case "ChangeState":
-                    new ChangeState(this.Action.Replace(NextWord(Action) + ".", ""), this.card, this.Affected, this.NotAffected);
-                    break;
-                case "Show":
-                    new Show(this.Action.Replace(NextWord(Action) + ".", ""), this.card, this.Affected, this.NotAffected).Effect();
-                    break;
-            }
-        }
-        public void CutExpression()
-        {
-            if(this.Action.Contains("."))
-            {
-                this.Action = this.Action.Substring(this.Action.IndexOf("."), (this.Action.Length - this.Action.IndexOf(".")));
-            }
-            else
-            {
-                this.Action = "";
-            }
-        }
-        public string NextWord(string expression)
-        {
-            for (var i = 0; i < expression.Length; i++)
-            {
-                if (expression[i] == '.')
-                {
-                    string word = expression.Substring(0, i);
-                    return word;
-                }
-            }
-            return expression;
-        }
-        public Player SetAffected(string player)
-        {
-            if (player == "Owner")
-            {
-                return card.Owner;
-            }
-            else
-            {
-                return card.Enemy;
-            }
-        }
-        public Player SetNotAffected()
-        {
-            foreach (var player in Game.PlayersInventary)
-            {
-                if (player != this.Affected)
-                {
-                    return player;
-                }
-            }
-            throw (new Exception("Error in Actions.SetEnemy()"));
-        }
+        
         public int setFactor()
         {
-            switch (this.Action)
+            switch (this.expressionA)
             {
                 case "EnemyHand":
-                    return this.card.Enemy.hand.Count();
+                    return this.Relic.Enemy.hand.Count();
                 case "OwnerHand":
-                    return this.card.Owner.hand.Count();
+                    return this.Relic.Owner.hand.Count();
                 case "EnemyBattleField":
-                    return this.card.Enemy.userBattleField.Length;
+                    return this.Relic.Enemy.userBattleField.Length;
                 case "OwnerBattleField":
-                    return this.card.Owner.userBattleField.Length;
+                    return this.Relic.Owner.userBattleField.Length;
                 case "Graveyard":
-                    return Game.GraveYard.Count();
+                    return this.Affected.Game.GraveYard.Count();
                 default:
                     return 1;
-            }
-        }
-        public bool IsDigit(string expression)
-        {
-            Regex regex = new Regex("[0-9]");
-            if (regex.Matches(expression).Count() == expression.Length)
-            {
-                return true;
-            }
-            return false;
-        }
-        public static void InterpretExpression(string action, Relics card)
-        {
-            int start = 0;
-            int end = 0;
-            for (var i = 0; i < action.Length; i++)
-            {
-                if (action[i] == '(')
-                {
-                    start = i + 1;
-                }
-                if (action[i] == ')')
-                {
-                    end = i;
-                    string actualAction = action.Substring(start, end - start);
-                    new InterpretAction(actualAction, card, null, null).Actions(actualAction);
-                }
             }
         }
     }
@@ -665,16 +478,17 @@ namespace card_gameProtot
     {
         int vida;
         int factor;
-        public Cure(string action, Relics Relic, Player Affected, Player NotAffected) : base(action, Relic, Affected, NotAffected)
+        public Cure(string action, Relics Relic, Player Affected, Player NotAffected, Player Owner, Player Enemy) : base(action, Relic, Affected, NotAffected, Owner, Enemy)
         {
-            this.vida = int.Parse(NextWord(this.Action));
+            this.vida = int.Parse(NextWord(this.expressionA));
             this.factor = 1;
-            if (this.Action.Contains("."))
+            if (this.expressionA.Contains("."))
             {   
-                this.Action = this.Action.Replace(NextWord(action) + ".", "");
-                if (IsDigit(this.Action))
+                this.expressionA = CutExpression(this.expressionA);
+                Console.WriteLine(expressionA);
+                if (IsDigit(this.expressionA))
                 {
-                    factor = int.Parse(this.Action);
+                    factor = int.Parse(this.expressionA);
                 }
                 else
                 {
@@ -684,8 +498,6 @@ namespace card_gameProtot
         }
         public void Effect()
         {
-            Console.WriteLine(vida + "  " + factor);
-            Console.ReadKey();
             Affected.life += vida * factor;
         }
     }
@@ -693,16 +505,16 @@ namespace card_gameProtot
     {
         int damage;
         int factor;
-        public Attack(string action, Relics Relic, Player Affected, Player NotAffected) : base(action, Relic, Affected, NotAffected)
+        public Attack(string action, Relics Relic, Player Affected, Player NotAffected, Player Owner, Player Enemy) : base(action, Relic, Affected, NotAffected, Owner, Enemy)
         {
-            this.damage = int.Parse(NextWord(this.Action));
+            this.damage = int.Parse(NextWord(this.expressionA));
             this.factor = 1;
-            if (this.Action.Contains("."))
+            if (this.expressionA.Contains("."))
             {
-                this.Action = this.Action.Replace(NextWord(action) + ".", "");
-                if (IsDigit(this.Action))
+                this.expressionA = CutExpression(this.expressionA);
+                if (IsDigit(this.expressionA))
                 {
-                    factor = int.Parse(this.Action);
+                    factor = int.Parse(this.expressionA);
                 }
                 else
                 {
@@ -713,39 +525,39 @@ namespace card_gameProtot
         public void Effect()
         {
 
-            Affected.attack += damage * factor;
+            Affected.character.attack += damage * factor;
         }
     }
     class Draw : InterpretAction
     {
         public int cards = 1;
-        public Draw(string action, Relics Relic, Player Affected, Player NotAffected) : base(action, Relic, Affected, NotAffected) { }
+        public Draw(string action, Relics Relic, Player Affected, Player NotAffected, Player Owner, Player Enemy) : base(action, Relic, Affected, NotAffected, Owner, Enemy){}
         public void Effect()
         {
             List<Relics> affectedCards;
-            string Place = NextWord(this.Action);
+            string Place = NextWord(this.expressionA);
             switch (Place)
             {
                 case "EnemyHand":
                     //POSIBLEMENTE ESTO HAYA QUE MODIFICARLO EN UN FUTURO PARA AGREGAR LA OPCION DE QUE EL ENEMIGO PUEDA ROBA DE MI MANO
-                    this.Action = this.Action.Replace(NextWord(Action) + ".", "");
-                    if (IsDigit(NextWord(this.Action)))
+                    this.expressionA = CutExpression(this.expressionA);
+                    if (IsDigit(NextWord(this.expressionA)))
                     {
                         NextDraw();
                         for (int i = 0; i < cards; i++)
                         {
-                            if (this.card.Enemy.hand.Count() != 0)
+                            if (this.Relic.Enemy.hand.Count() != 0)
                             {
                                 Random rnd = new Random();
-                                int random = rnd.Next(0, this.card.Enemy.hand.Count() - 1);
-                                int cardId = this.card.Enemy.hand[random].id;
-                                this.card.Enemy.hand.RemoveAt(random);
-                                foreach (var card in Program.CardsInventary)
+                                int random = rnd.Next(0, this.Relic.Enemy.hand.Count() - 1);
+                                int cardId = this.Relic.Enemy.hand[random].id;
+                                this.Relic.Enemy.hand.RemoveAt(random);
+                                foreach (var card in this.Affected.Game.CardsInventary)
                                 {
                                     if (card.id == cardId)
                                     {
-                                        this.card.Owner.hand.Add(new Relics(this.card.Owner, this.card.Enemy, card.id, card.name, card.passiveDuration, card.activeDuration,
-                                                card.imgAddress, card.isTrap, card.type, card.effect));
+                                        this.Relic.Owner.hand.Add(new Relics(this.Relic.Owner, this.Relic.Enemy, card.id, card.name, card.passiveDuration, card.activeDuration,
+                                                card.imgAddress, card.isTrap, card.type, card.effect, card.description));
                                         break;
                                     }
                                 }
@@ -755,8 +567,8 @@ namespace card_gameProtot
                     }
                     else
                     {
-                        this.Action = this.Action.Replace(NextWord(this.Action) + ".", "");
-                        List<Relics> affectedCard = new InterpreterList().FullList(this.Action, this.card.Enemy);
+                        this.expressionA = this.expressionA.Replace(NextWord(this.expressionA) + ".", "");
+                        List<Relics> affectedCard = FullList.FullList(this.expressionA, this.Relic.Enemy);
                         foreach (var relic in affectedCard)
                         {
                             Console.WriteLine("Carlos no ha implementado el metodo robar cartas especificas de la mano enemiga");
@@ -764,65 +576,65 @@ namespace card_gameProtot
                     }
                     break;
                 case "OwnerBattleField":
-                    affectedCards = new InterpreterList().FullList(this.Action, this.card.Enemy);
+                    affectedCards = FullList.FullList(this.expressionA, this.Relic.Enemy);
                     foreach (var relics in affectedCards)
                     {
-                        for (int i = 0; i < this.card.Owner.userBattleField.Length; i++)
+                        for (int i = 0; i < this.Relic.Owner.userBattleField.Length; i++)
                         {
-                            if (this.card.Owner.userBattleField[i] == relics)
+                            if (this.Relic.Owner.userBattleField[i] == relics)
                             {
-                                int cardId = this.card.Owner.userBattleField[i].id;
-                                foreach (var card in Program.CardsInventary)
+                                int cardId = this.Relic.Owner.userBattleField[i].id;
+                                foreach (var card in this.Affected.Game.CardsInventary)
                                 {
                                     if (card.id == cardId)
                                     {
-                                        this.card.Owner.hand.Add(new Relics(Affected, this.card.Enemy, card.id, card.name, card.passiveDuration, card.activeDuration,
-                                                        card.imgAddress, card.isTrap, card.type, card.effect));
+                                        this.Relic.Owner.hand.Add(new Relics(Affected, this.Relic.Enemy, card.id, card.name, card.passiveDuration, card.activeDuration,
+                                                        card.imgAddress, card.isTrap, card.type, card.effect, card.description));
                                         break;
                                     }
                                 }
-                                this.card.Owner.userBattleField[i] = null;
+                                this.Relic.Owner.userBattleField[i] = null;
                             }
                         }
                     }
                     break;
                 case "Graveyard":
-                    affectedCards = new InterpreterList().FullList(this.Action, this.card.Enemy);
+                    affectedCards = FullList.FullList(this.expressionA, this.Relic.Enemy);
                     foreach (var card in affectedCards)
                     {
-                        foreach (var Relic in Game.GraveYard)
+                        foreach (var Relic in this.Affected.Game.GraveYard)
                         {
                             if (Relic.id == card.id)
                             {
-                                foreach (var cards in Program.CardsInventary)
+                                foreach (var cards in this.Affected.Game.CardsInventary)
                                 {
                                     if (cards.id == card.id)
                                     {
-                                        Affected.hand.Add(new Relics(Affected, this.card.Enemy, cards.id, cards.name, cards.passiveDuration, cards.activeDuration,
-                                                cards.imgAddress, cards.isTrap, cards.type, cards.effect));
+                                        Affected.hand.Add(new Relics(Affected, this.Relic.Enemy, cards.id, cards.name, cards.passiveDuration, cards.activeDuration,
+                                                cards.imgAddress, cards.isTrap, cards.type, cards.effect, card.description));
                                         break;
                                     }
                                 }
-                                Game.GraveYard.Remove(Relic);
+                                this.Affected.Game.GraveYard.Remove(Relic);
                                 break;
                             }
                         }
                     }
                     break;
                 case "Deck":
-                    if (IsDigit(NextWord(this.Action)))
+                    if (IsDigit(NextWord(this.expressionA)))
                     {
                         NextDraw();
                         for (int i = 0; i < cards; i++)
                         {
                             Random rnd = new Random();
-                            int random = rnd.Next(1, Program.CardsInventary.Count() + 1);
-                            foreach (var card in Program.CardsInventary)
+                            int random = rnd.Next(1, this.Affected.Game.CardsInventary.Count() + 1);
+                            foreach (var card in this.Affected.Game.CardsInventary)
                             {
                                 if (card.id == random)
                                 {
-                                    this.card.Owner.hand.Add(new Relics(Affected, this.card.Enemy, card.id, card.name, card.passiveDuration, card.activeDuration,
-                                                    card.imgAddress, card.isTrap, card.type, card.effect));
+                                    this.Relic.Owner.hand.Add(new Relics(Affected, this.Relic.Enemy, card.id, card.name, card.passiveDuration, card.activeDuration,
+                                                    card.imgAddress, card.isTrap, card.type, card.effect, card.description));
                                     break;
                                 }
                             }
@@ -830,15 +642,15 @@ namespace card_gameProtot
                     }
                     else
                     {
-                        affectedCards = new InterpreterList().FullList(this.Action, this.card.Enemy);
+                        affectedCards = FullList.FullList(this.expressionA, this.Relic.Enemy);
                         foreach (var card in affectedCards)
                         {
-                            foreach (var cardInventary in Program.CardsInventary)
+                            foreach (var cardInventary in this.Affected.Game.CardsInventary)
                             {
                                 if (card.id == cardInventary.id)
                                 {
-                                    Affected.hand.Add(new Relics(Affected, this.card.Enemy, cardInventary.id, cardInventary.name, cardInventary.passiveDuration, cardInventary.activeDuration,
-                                            cardInventary.imgAddress, cardInventary.isTrap, cardInventary.type, cardInventary.effect));
+                                    Affected.hand.Add(new Relics(Affected, this.Relic.Enemy, cardInventary.id, cardInventary.name, cardInventary.passiveDuration, cardInventary.activeDuration,
+                                            cardInventary.imgAddress, cardInventary.isTrap, cardInventary.type, cardInventary.effect, card.description));
                                     break;
                                 }
                             }
@@ -851,9 +663,9 @@ namespace card_gameProtot
         }
         public void NextDraw()
         {
-            this.cards = int.Parse(NextWord(this.Action));
+            this.cards = int.Parse(NextWord(this.expressionA));
             int factor = 1;
-            if (NextWord(this.Action) != "")
+            if (NextWord(this.expressionA) != "")
             {
                 factor = setFactor();
             }
@@ -864,16 +676,16 @@ namespace card_gameProtot
     {
         int defense;
         double factor;
-        public Defense(string action, Relics Relic, Player Affected, Player NotAffected) : base(action, Relic, Affected, NotAffected)
+        public Defense(string action, Relics Relic, Player Affected, Player NotAffected, Player Owner, Player Enemy) : base(action, Relic, Affected, NotAffected, Owner, Enemy)
         {
-            this.defense = int.Parse(NextWord(this.Action));
+            this.defense = int.Parse(NextWord(this.expressionA));
             this.factor = 1;
-            if (this.Action.Contains("."))
+            if (this.expressionA.Contains("."))
             {
-                this.Action = this.Action.Replace(NextWord(action) + ".", "");
-                if (IsDigit(NextWord(this.Action)))
+                this.expressionA = CutExpression(this.expressionA);
+                if (IsDigit(NextWord(this.expressionA)))
                 {
-                    factor = double.Parse(this.Action);
+                    factor = double.Parse(this.expressionA);
                 }
                 else
                 {
@@ -883,12 +695,12 @@ namespace card_gameProtot
         }
         public void Effect()
         {
-            Affected.defense += defense * factor;
+            Affected.character.defense += defense * factor;
         }
     }
     class ChangeState : InterpretAction
     {
-        public ChangeState(string action, Relics Relic, Player Affected, Player NotAffected) : base(action, Relic, Affected, NotAffected)
+        public ChangeState(string action, Relics Relic, Player Affected, Player NotAffected, Player Owner, Player Enemy) : base(action, Relic, Affected, NotAffected, Owner, Enemy)
         {
             switch (action)
             {
@@ -909,44 +721,44 @@ namespace card_gameProtot
     }
     class Remove : InterpretAction
     {
-        public Remove(string action, Relics Relic, Player Affected, Player NotAffected) : base(action, Relic, Affected, NotAffected) { }
+        public Remove(string action, Relics Relic, Player Affected, Player NotAffected, Player Owner, Player Enemy) : base(action, Relic, Affected, NotAffected, Owner, Enemy){}
 
         public void Effect()
         {
-            string place = NextWord(this.Action);
-            this.Action = this.Action.Replace(place + ".", "");
+            string place = NextWord(this.expressionA);
+            this.expressionA = this.expressionA.Replace(place + ".", "");
             switch (place)
             {
 
                 case "OwnerHand":
-                    if (IsDigit(NextWord(this.Action)))
+                    if (IsDigit(NextWord(this.expressionA)))
                     {
-                        RemoveForint(this.card.Owner.hand);
+                        RemoveForint(this.Relic.Owner.hand);
                         break;
                     }
-                    RemoveForList(this.card.Owner.hand);
+                    RemoveForList(this.Relic.Owner.hand);
                     break;
                 case "EnemyHand":
-                    if (IsDigit(NextWord(this.Action)))
+                    if (IsDigit(NextWord(this.expressionA)))
                     {
-                        RemoveForint(this.card.Enemy.hand);
+                        RemoveForint(this.Relic.Enemy.hand);
                         break;
                     }
-                    RemoveForList(this.card.Enemy.hand);
+                    RemoveForList(this.Relic.Enemy.hand);
                     break;
                 case "OwnerBattlefield":
-                    RemoveForBattlefiel(this.card.Owner.userBattleField);
+                    RemoveForBattlefiel(this.Relic.Owner.userBattleField);
                     break;
                 case "EnemyBattlefield":
-                    RemoveForBattlefiel(this.card.Enemy.userBattleField);
+                    RemoveForBattlefiel(this.Relic.Enemy.userBattleField);
                     break;
             }
         }
         void RemoveForint(List<Relics> Place)
         {
-            int cards = int.Parse(NextWord(this.Action));
+            int cards = int.Parse(NextWord(this.expressionA));
             int factor = 1;
-            if (NextWord(this.Action) != "")
+            if (NextWord(this.expressionA) != "")
             {
                 factor = setFactor();
             }
@@ -960,7 +772,7 @@ namespace card_gameProtot
         }
         void RemoveForList(List<Relics> Place)
         {
-            List<Relics> affectedCards = new InterpreterList().FullList(this.Action, this.card.Enemy);
+            List<Relics> affectedCards = FullList.FullList(this.expressionA, this.Relic.Enemy);
             foreach (var listCard in affectedCards)
             {
                 foreach (var cardPlace in Place)
@@ -974,7 +786,7 @@ namespace card_gameProtot
         }
         void RemoveForBattlefiel(Relics[] Battlefield)
         {
-            List<Relics> affectedCards = new InterpreterList().FullList(this.Action, this.card.Enemy);
+            List<Relics> affectedCards = FullList.FullList(this.expressionA, this.Relic.Enemy);
             for (int i = 0; i < Battlefield.Length; i++)
             {
                 foreach (var listCard in affectedCards)
@@ -991,10 +803,10 @@ namespace card_gameProtot
     class Show : InterpretAction
     {
         int cards;
-        public Show(string action, Relics card, Player Affected, Player NotAffected) : base(action, card, Affected, NotAffected){}
+        public Show(string action, Relics Relic, Player Affected, Player NotAffected, Player Owner, Player Enemy) : base(action, Relic, Affected, NotAffected, Owner, Enemy){}
         public void Effect()
         {
-            string count = NextWord(this.Action);
+            string count = NextWord(this.expressionA);
             List<Relics> show = new List<Relics>();
             if(IsDigit(count))
             {

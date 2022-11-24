@@ -3,12 +3,12 @@
     //PassiveDuration: Cada cuanto tiempo se activa el efecto
     //ActiveDuration: Cuanto tiempo dura el efecto
     
-    public class Cards : Actions
+    public class Cards
     {
-        public string name = "";
-        public int activeDuration;
-        public int passiveDuration;
-        public string imgAddress = "";
+        public string name{get;}
+        public int activeDuration{get;set;}
+        public int passiveDuration{get;set;}
+        public string imgAddress{get;}
 
         public Cards(string name, int passiveDuration, int activeDuration, string imgAddress)
         {
@@ -20,18 +20,16 @@
     } 
     public class Relics : Cards
     {
-        public int id;
-        public Player Owner;
-        public Player Enemy;
-        public Player Affected;
-        public Player notAffected;
-        public string condition = "";
-        public string type = ""; 
-        public string effect = "";
-        public bool isTrap;
+        public int id{get;}
+        public Player Owner{get;}
+        public Player Enemy{get;}
+        public string type{get;} 
+        public string effect{get;}
+        public bool isTrap{get;}
+        public string description{get;}
         public CardState cardState = CardState.OnDeck;
 
-        public Relics(Player Owner, Player Enemy, int id, string Name, int passiveDuration, int activeDuration, string imgAddress, bool isTrap, string type, string effect)
+        public Relics(Player Owner, Player Enemy, int id, string Name, int passiveDuration, int activeDuration, string imgAddress, bool isTrap, string type, string effect, string description)
                       : base (Name, passiveDuration, activeDuration, imgAddress)
         {
             this.Owner = Owner;
@@ -41,32 +39,14 @@
             this.isTrap = isTrap;
             this.type= type;
             this.effect = effect;
-        }
+            this.description = description;
 
-        public void SetPlayer(Player Owner, Player Enemy, relativePlayer relativePlayer)
-        {
-            if (relativePlayer == relativePlayer.Owner)
-            {
-                this.Affected = Owner;
-            }
-            else
-            {
-                this.Affected = Enemy;
-            }
         }
-        public  void SetEnemy()
+        public void Effect()
         {
-            foreach (var player in Game.PlayersInventary)
-            {
-                if (player != this.Affected)
-                {
-                    this.notAffected = player;
-                    return;
-                }
-            }
-            throw(new Exception("Error in Actions.SetEnemy()"));
+            AddtoBattleField();
+            Scan(effect);
         }
-        
         // public double setFactor(int effect, Player player, Player enemy)
         // {
         //     double factor = 1;
@@ -104,56 +84,181 @@
                     break;
                 }
             }
-            
         }       
-        public void Effect()
+        public void Scan(string effect)
         {
-            AddtoBattleField();
-            new Expression(this.Owner, this.Enemy, effect, this).Scan();
+            string[] expression = effect.Split('\n');
+            Scan(expression, 0);
+        }
+        //Metodo Recursivo
+        public void Scan(string[] expression, int index)
+        {
+            if(index==expression.Length)
+            {
+                return;
+            }
+            if (expression[index].Contains("if ("))
+            {
+                string condition = expression[index].Substring(expression[index].IndexOf("("), expression[index].Length -2 - expression[index].IndexOf("("));
+                if (new BoolEx(condition, Owner, Enemy, this).Evaluate())
+                {
+                    Scan(expression, index+1);
+                }
+                else
+                {
+                    //Si la condicion es falsa revisará hasta encontrar la llave de cierre correspondiente al if
+                    for (int i = index+1; i < expression.Length; i++)
+                    {
+                        int key = 0;
+                        if(expression[i].Contains("{"))
+                        {
+                            key++;
+                        }
+                        else if(expression[i].Contains("}"))
+                        {
+                            key--;
+                        }
+                        if(key == 0)
+                        {
+                            if(expression[i].Contains("else"))
+                            {
+                                Scan(expression, i+1);
+                                break;
+                            }
+                            if(expression[i].Contains("else if ("))
+                            {
+                                expression[i] = expression[i].Replace("else ", "");
+                                Scan(expression, i);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            else if (!expression[index].Contains("{") && !expression[index].Contains("}"))
+            {
+                InterpretActionExpression(expression[index]);
+                Scan(expression, index+1);
+            }    
+            //Si no es un if ni una accion es una llave y nos la saltamos
+            else Scan(expression, index+1); 
+        }
+        public void InterpretActionExpression(string action)
+        {
+            EditExpression Edit = new EditExpression();
+            int start = action.IndexOf("(");
+            int end = action.IndexOf(")");
+            string actualAction = action.Substring(start, end - start);
+            
+            Player Affected = SetAffected(Edit.NextWord(actualAction));
+            Player NotAffected = SetNotAffected(Affected);
+            Actions(actualAction, Affected, NotAffected);
+        
+        }
+        public Player SetAffected(string player)
+        {
+            if (player == "Owner")
+            {
+                return this.Owner;
+            }
+            else
+            {
+                return this.Enemy;
+            }
+        }
+        public Player SetNotAffected(Player Affected)
+        {
+            return Affected.Enemy;
+        }
+        public void Actions(string expression, Player Affected, Player NotAffected)
+        {
+            EditExpression Edit = new EditExpression();
+            expression = Edit.CutExpression(expression);
+            switch (Edit.NextWord(expression))
+            {
+                case "Attack":
+                    new Attack(Edit.CutExpression(expression), this, Affected, NotAffected, this.Owner, this.Enemy).Effect();
+                    break;
+                case "Cure":
+                    new Cure(Edit.CutExpression(expression), this, Affected, NotAffected, this.Owner, this.Enemy).Effect();
+                    break;
+                case "Draw":
+                    new Draw(Edit.CutExpression(expression), this, Affected, NotAffected, this.Owner, this.Enemy).Effect();
+                    break;
+                case "Remove":
+                    new Remove(Edit.CutExpression(expression), this, Affected, NotAffected, this.Owner, this.Enemy).Effect();
+                    break;
+                case "Defense":
+                    new Defense(Edit.CutExpression(expression), this, Affected, NotAffected, this.Owner, this.Enemy).Effect();
+                    break;
+                case "ChangeState":
+                    new ChangeState(Edit.CutExpression(expression), this, Affected, NotAffected, this.Owner, this.Enemy);
+                    break;
+                case "Show":
+                    new Show(Edit.CutExpression(expression), this, Affected, NotAffected, this.Owner, this.Enemy).Effect();
+                    break;
+            }
         }
     }
-    public class Character : Cards
+    public class Character : Relics
     {
         public double attack;
         public double defense;
-
         /// <returns>Construye un personaje</returns>
-        public Character(string name, int passiveDuration, int activeDuration, string imgAddress, double attack, double defense) : base(name, passiveDuration, activeDuration, imgAddress)
+        public Character(Player Owner, Player Enemy, int id, string Name, int passiveDuration, int activeDuration, string imgAddress, string effect, string description, double attack, double defense) : base(Owner, Enemy, id, Name, passiveDuration, activeDuration, imgAddress, false, "character", effect, description)
         {
             this.attack = attack;
             this.defense = defense;
         }
-
-
-        public static void SpecialAttack(Player player, double attack, int defense, int life, State state)
-        {
-            player.attack += attack;
-            player.defense += defense;
-            player.state = state;
-            player.life = life;
-        }
     }
-    public class Player : Character 
+    public class Player
     {
-        Player Enemy;
-        public string nick = "";
-        public double life;
-        public List<Relics> hand = new List<Relics>();
-        public Relics[] userBattleField = new Relics[4];
-        public State state = State.Safe;
+        public Player Enemy{get;set;}
+        public string nick{get;}
+        public double life{get; set;}
+        public List<Relics> hand{get;}
+        public Character character;
+        public Relics[] userBattleField{get;}
+        public Game Game{get; set;}
+        public State state{get;set;}
 
-        public Player(Character character, string nick): base(character.name, character.passiveDuration, character.activeDuration, character.imgAddress, character.attack, character.defense) 
+        public Player(Character character, string nick)
         {
             this.nick = nick;
             this.life = 100;
+            this.hand = new List<Relics>();
+            this.userBattleField = new Relics[4];
+            this.character = character;
+            this.state = State.Safe;
         }
-
+        public void SetAux(Player Enemy, Game game)
+        {
+            this.Enemy = Enemy;
+            this.Game = game;
+        }
+        public void TakeFromDeck(double cards)
+        {
+            for (int i = 0; i < cards; i++)
+            {
+                Random rnd = new Random();
+                int random = rnd.Next(1, this.Game.CardsInventary.Count()+1);
+                foreach (var card in this.Game.CardsInventary)
+                {
+                    if(card.id == random)
+                    {
+                        this.hand.Add( new Relics(this, this.Enemy, card.id, card.name, card.passiveDuration, card.activeDuration, 
+                                        card.imgAddress,card.isTrap, card.type, card.effect, card.description));
+                        break;
+                    }
+                }
+            }
+        }
         public void printInfo()
         {
             Console.WriteLine("Nick: " + this.nick);
             Console.WriteLine("Life: " + this.life);
-            Console.WriteLine("Attack: " + this.attack);
-            Console.WriteLine("Defense: " + this.defense);
+            Console.WriteLine("Attack: " + this.character.attack);
+            Console.WriteLine("Defense: " + this.character.defense);
             Console.WriteLine("State: " + this.state);
             this.PrintHand();
             this.PrintBattleField();
@@ -181,18 +286,18 @@
                 }
             }
             Console.WriteLine();
-            Console.WriteLine("BatteField-"+this.name+": "+ this.userBattleField.Length);
+            Console.WriteLine("BatteField-"+this.character.name+": "+ this.userBattleField.Length);
             Console.WriteLine();
 
         }
         public void PrintGraveYard()
         {
-            foreach (var card in Game.GraveYard)
+            foreach (var card in this.Game.GraveYard)
             {
                 Console.Write(card.name+", ");
             }
             Console.WriteLine();
-            Console.WriteLine("Graveyard-"+this.name+": "+ Game.GraveYard.Count());
+            Console.WriteLine("Graveyard-"+this.character.name+": "+ this.Game.GraveYard.Count());
 
         }
         public int getCardType(CardState cardState)
@@ -204,7 +309,7 @@
                 case CardState.Activated:
                     return this.userBattleField.Length;
                 case CardState.OnGraveyard:
-                    return Game.GraveYard.Count();
+                    return this.Game.GraveYard.Count();
             }
             return 0;
         }
@@ -220,7 +325,6 @@
             return false;
         }
     }
-
     #region auxiliar classes
     
     public enum CardState
