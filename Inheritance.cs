@@ -109,10 +109,11 @@
         }       
         public void Effect()
         {
-            if (condition == "" || new BoolEx(this.condition, Owner, Enemy).ScanExpression())
+            if (condition == "" || new BoolEx(this.condition, Owner, Enemy, this).ScanExpression())
             {
                 AddtoBattleField();
-                InterpretAction.InterpretExpression(effect, this);
+                new Expression(this.Owner, this.Enemy, effect, this).Scan();
+                // InterpretAction.InterpretExpression(effect, this);
                 // foreach(var Effect in EffectsOrder)
                 // {
                     

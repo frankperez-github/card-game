@@ -27,7 +27,19 @@ namespace card_gameProtot
 
             //Anillo de Zeus
             //Ganas 5 de vida por cada carta en tu mano
-            CardsInventary.Add(new Relics(defaultPlayer, defaultPlayer, 3, "Anillo de Zeus", 0, 1, "imgpath3", false, "",  "cure", "(Owner.Cure.5.OwnerHand)"));
+            CardsInventary.Add(new Relics(defaultPlayer, defaultPlayer, 3, "Anillo de Zeus", 0, 1, "imgpath3", false, "",  "cure", 
+            @"if (Enemy.Life)=(100)\n
+            {\n
+                if (Owner.Defense)=(5)\n
+                {\n
+                    (Owner.Cure.5.OwnerHand)\n
+                }\n
+                else\n
+                {\n
+                    (Owner.Cure.100)\n
+                }\n
+            }"
+            ));
 
             //Escudo de la pobreza
             //Trap, evita el 50% del daño del enemigo

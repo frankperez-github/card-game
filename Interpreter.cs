@@ -24,48 +24,100 @@ namespace card_gameProtot
             return false;
         }
         public void Scan()
-        { 
-            string[] expression = this.expressionA.Split(" ");
-            for (int i = 0; i < expression.Length; i++)
+        {
+            string[] expression = this.expressionA.Split('\n');
+            Scan(expression, 0);
+        }
+        public void Scan(string[] expression, int index)
+        {
+            if(index==expression.Length)
             {
-                if(expression[i]=="if")
+                return;
+            }
+            if (expression[index].Contains("if ("))
+            {
+
+                string condition = expression[index].Substring(expression[index].IndexOf("("), expression[index].Length -2 - expression[index].IndexOf("("));
+                
+                if (new BoolEx(condition, Owner, Enemy, this.Relic).ScanExpression())
                 {
-                    i++;
-                    if(new BoolEx(expressionA, Owner, Enemy).ScanExpression())
+                    Scan(expression, index+1);
+                }
+                else
+                {
+                    //Si la condicion es falsa revisará hasta encontrar la llave de cierre correspondiente al if
+                    for (int i = index+1; i < expression.Length; i++)
                     {
-                        InterpretAction.InterpretExpression(expression[i], Relic);
-                    }
-                    else
-                    {
-                        if(i+1 < expression.Length && expression[i+1] == "else")
+                        int key = 0;
+                        if(expression[i] == "{")
                         {
-                            i++;
-                            InterpretAction.InterpretExpression(expression[i], Relic);
+                            key++;
                         }
-                        
+                        else if(expression[i] == "}")
+                        {
+                            key--;
+                        }
+                        if(key == 0)
+                        {
+                            Console.WriteLine(expression[i]);
+                            expression[i].Replace("\n", "");
+                            Console.WriteLine(expression[i]);
+                            if(expression[i+1] == "else")
+                            {
+                                Scan(expression, i+2);
+                            }
+                            if(expression[i+1]  == "else if (")
+                            {
+                                Scan(expression, i+1);
+                            }
+                        }
                     }
                 }
             }
+            else if (expression[index] == "else")
+            {
+               for (int i = index+1; i < expression.Length; i++)
+                    {
+                        int key = 0;
+                        if(expression[i] == "{")
+                        {
+                            key++;
+                        }
+                        else if(expression[i] == "}")
+                        {
+                            key--;
+                        }
+                        if(key == 0)
+                        {
+                            Scan(expression, index+1);
+                        }
+                    } 
+            }
+            else if (expression[index] != "{" && expression[index] != "}")
+            {
+                InterpretAction.InterpretExpression(expression[index], Relic);
+                Scan(expression, index+1);
+            }    
+            //Si no es un if ni una accion es una llave y nos la saltamos
+            else Scan(expression, index+1); 
         }
     }
 
     class AlgEx : Expression
     {
-        public AlgEx(string expression, Player Owner, Player Enemy): base(Owner, Enemy, expression)
-        {
-        }
+        public AlgEx(string expression, Player Owner, Player Enemy, Relics relics) : base(Owner, Enemy, expression, relics){}
         public int Evaluate(string leftExpression, string Operator, string rightExpression)
         {
             switch (Operator)
             {
                 case "+":
-                    return new Add(leftExpression, rightExpression, Owner, Enemy).Evaluate();
+                    return new Add(leftExpression, rightExpression, Owner, Enemy, Relic).Evaluate();
                 case "-":
-                    return new Rest(leftExpression, rightExpression, Owner, Enemy).Evaluate();
+                    return new Rest(leftExpression, rightExpression, Owner, Enemy, Relic).Evaluate();
                 case "*":
-                    return new Mult(leftExpression, rightExpression, Owner, Enemy).Evaluate();
+                    return new Mult(leftExpression, rightExpression, Owner, Enemy, Relic).Evaluate();
                 case "/":
-                    return new Div(leftExpression, rightExpression, Owner, Enemy).Evaluate();
+                    return new Div(leftExpression, rightExpression, Owner, Enemy, Relic).Evaluate();
             }
             return -1;
         }
@@ -89,15 +141,15 @@ namespace card_gameProtot
         {
             switch (expression)
             {
-                case "attack":
+                case "Attack":
                     return (int)player.attack;
-                case "life":
+                case "Life":
                     return (int)player.life;
-                case "defense":
+                case "Defense":
                     return (int)player.defense;
-                case "hand":
+                case "Hand":
                     return (int)player.hand.Count();
-                case "state":
+                case "State":
                     switch (player.state)
                     {
                         case State.Poisoned: return 2000;
@@ -158,63 +210,63 @@ namespace card_gameProtot
     {
         string leftExpression = "";
         string rightExpression = "";
-        public Add(string leftExpression, string rightExpression, Player Owner, Player Enemy) : base(leftExpression, Owner, Enemy)
+        public Add(string leftExpression, string rightExpression, Player Owner, Player Enemy, Relics relics) : base(leftExpression, Owner, Enemy, relics)
         {
             this.leftExpression = leftExpression;
             this.rightExpression = rightExpression;
         }
         public int Evaluate()
         {
-            return new AlgEx(leftExpression, Owner, Enemy).ScanExpression() + new AlgEx(rightExpression, Owner, Enemy).ScanExpression();
+            return new AlgEx(leftExpression, Owner, Enemy, Relic).ScanExpression() + new AlgEx(rightExpression, Owner, Enemy, Relic).ScanExpression();
         }
     }
     class Rest : AlgEx
     {
         string leftExpression = "";
         string rightExpression = "";
-        public Rest(string leftExpression, string rightExpression, Player Owner, Player Enemy) : base(leftExpression, Owner, Enemy)
+        public Rest(string leftExpression, string rightExpression, Player Owner, Player Enemy, Relics relics) : base(leftExpression, Owner, Enemy, relics)
         {
             this.leftExpression = leftExpression;
             this.rightExpression = rightExpression;
         }
         public int Evaluate()
         {
-            return new AlgEx(leftExpression, Owner, Enemy).ScanExpression() - new AlgEx(rightExpression, Owner, Enemy).ScanExpression();
+            return new AlgEx(leftExpression, Owner, Enemy, Relic).ScanExpression() - new AlgEx(rightExpression, Owner, Enemy, Relic).ScanExpression();
         }
     }
     class Mult : AlgEx
     {
         string leftExpression = "";
         string rightExpression = "";
-        public Mult(string leftExpression, string rightExpression, Player Owner, Player Enemy) : base(leftExpression, Owner, Enemy)
+        public Mult(string leftExpression, string rightExpression, Player Owner, Player Enemy, Relics relics) : base(leftExpression, Owner, Enemy, relics)
         {
             this.leftExpression = leftExpression;
             this.rightExpression = rightExpression;
         }
         public int Evaluate()
         {
-            return new AlgEx(leftExpression, Owner, Enemy).ScanExpression() * new AlgEx(rightExpression, Owner, Enemy).ScanExpression();
+            return new AlgEx(leftExpression, Owner, Enemy, Relic).ScanExpression() * new AlgEx(rightExpression, Owner, Enemy, Relic).ScanExpression();
         }
     }
     class Div : AlgEx
     {
         string leftExpression = "";
         string rightExpression = "";
-        public Div(string leftExpression, string rightExpression, Player Owner, Player Enemy) : base(leftExpression, Owner, Enemy)
+        public Div(string leftExpression, string rightExpression, Player Owner, Player Enemy, Relics relics) : base(leftExpression, Owner, Enemy, relics)
         {
             this.leftExpression = leftExpression;
             this.rightExpression = rightExpression;
         }
         public int Evaluate()
         {
-            return new AlgEx(leftExpression, Owner, Enemy).ScanExpression() / new AlgEx(rightExpression, Owner, Enemy).ScanExpression();
+            return new AlgEx(leftExpression, Owner, Enemy, Relic).ScanExpression() / new AlgEx(rightExpression, Owner, Enemy, Relic).ScanExpression();
         }
     }
 
 
     class BoolEx : Expression
     {
-        public BoolEx(string expression, Player Owner, Player Enemy): base(Owner, Enemy, expression)
+        public BoolEx(string expression, Player Owner, Player Enemy, Relics relics) : base(Owner, Enemy, expression, relics)
         {
         }
         public virtual bool Evaluate(string leftExpression, string Operator, string rightExpression)
@@ -222,15 +274,15 @@ namespace card_gameProtot
             switch (Operator)
             {
                 case "y":
-                    return new And(leftExpression, rightExpression, Owner, Enemy).Evaluate();
+                    return new And(leftExpression, rightExpression, Owner, Enemy, Relic).Evaluate();
                 case "o":
-                    return new Or(leftExpression, rightExpression, Owner, Enemy).Evaluate();
+                    return new Or(leftExpression, rightExpression, Owner, Enemy, Relic).Evaluate();
                 case "=":
-                    return new Equal(leftExpression, rightExpression, Owner, Enemy).Evaluate();
+                    return new Equal(leftExpression, rightExpression, Owner, Enemy, Relic).Evaluate();
                 case "<":
-                    return new Less_Than(leftExpression, rightExpression, Owner, Enemy).Evaluate();
+                    return new Less_Than(leftExpression, rightExpression, Owner, Enemy, Relic).Evaluate();
                 case ">":
-                    return new Greater_Than(leftExpression, rightExpression, Owner, Enemy).Evaluate();
+                    return new Greater_Than(leftExpression, rightExpression, Owner, Enemy, Relic).Evaluate();
             }
             return false;
         }
@@ -269,7 +321,7 @@ namespace card_gameProtot
                         Operator = input[i + 1] + "";
                         if (input[i + 2] == '(')
                         {
-                            rightExpression = input.Substring(i + 3, input.Length - (i + 4));
+                            rightExpression = input.Substring(i + 3, input.Length - (i + 5));
                             break;
                         }
                         rightExpression = input.Substring(i + 2, ((input.Length) - (i + 2)));
@@ -277,6 +329,7 @@ namespace card_gameProtot
                     }
                 }
             }
+            
             return Evaluate(leftExpression, Operator, rightExpression);
         }
     }
@@ -284,7 +337,7 @@ namespace card_gameProtot
     {
         string leftExpression = "";
         string rightExpression = "";
-        public And(string leftExpression, string rightExpression, Player Owner, Player Enemy) : base(leftExpression, Owner, Enemy)
+        public And(string leftExpression, string rightExpression, Player Owner, Player Enemy, Relics relics) : base(leftExpression, Owner, Enemy, relics)
         {
             this.leftExpression = leftExpression;
             this.rightExpression = rightExpression;
@@ -292,14 +345,14 @@ namespace card_gameProtot
         public bool Evaluate()
         {
 
-            return new BoolEx(leftExpression, Owner, Enemy).ScanExpression() && new BoolEx(rightExpression, Owner, Enemy).ScanExpression();
+            return new BoolEx(leftExpression, Owner, Enemy, Relic).ScanExpression() && new BoolEx(rightExpression, Owner, Enemy, Relic).ScanExpression();
         }
     }
     class Or : BoolEx
     {
         string leftExpression = "";
         string rightExpression = "";
-        public Or(string leftExpression, string rightExpression, Player Owner, Player Enemy) : base(leftExpression, Owner, Enemy)
+        public Or(string leftExpression, string rightExpression, Player Owner, Player Enemy, Relics relics) : base(leftExpression, Owner, Enemy, relics)
         {
             this.leftExpression = leftExpression;
             this.rightExpression = rightExpression;
@@ -307,7 +360,7 @@ namespace card_gameProtot
 
         public bool Evaluate()
         {
-            return new BoolEx(leftExpression, Owner, Enemy).ScanExpression() || new BoolEx(rightExpression, Owner, Enemy).ScanExpression();
+            return new BoolEx(leftExpression, Owner, Enemy, Relic).ScanExpression() || new BoolEx(rightExpression, Owner, Enemy, Relic).ScanExpression();
         }
 
     }
@@ -315,14 +368,14 @@ namespace card_gameProtot
     {
         string leftExpression = "";
         string rightExpression = "";
-        public Equal(string leftExpression, string rightExpression, Player Owner, Player Enemy) : base(leftExpression, Owner, Enemy)
+        public Equal(string leftExpression, string rightExpression, Player Owner, Player Enemy, Relics relics) : base(leftExpression, Owner, Enemy, relics)
         {
             this.leftExpression = leftExpression;
             this.rightExpression = rightExpression;
         }
         public bool Evaluate()
         {
-            if (new AlgEx(this.leftExpression, Owner, Enemy).ScanExpression() == new AlgEx(this.rightExpression, Owner, Enemy).ScanExpression())
+            if (new AlgEx(this.leftExpression, Owner, Enemy, Relic).ScanExpression() == new AlgEx(this.rightExpression, Owner, Enemy, Relic).ScanExpression())
             {
                 return true;
             }
@@ -333,14 +386,14 @@ namespace card_gameProtot
     {
         string leftExpression = "";
         string rightExpression = "";
-        public Less_Than(string leftExpression, string rightExpression, Player Owner, Player Enemy) : base(leftExpression, Owner, Enemy)
+        public Less_Than(string leftExpression, string rightExpression, Player Owner, Player Enemy, Relics relics) : base(leftExpression, Owner, Enemy, relics)
         {
             this.leftExpression = leftExpression;
             this.rightExpression = rightExpression;
         }
         public bool Evaluate()
         {
-            if (new AlgEx(this.leftExpression, Owner, Enemy).ScanExpression() < new AlgEx(this.rightExpression, Owner, Enemy).ScanExpression())
+            if (new AlgEx(this.leftExpression, Owner, Enemy, Relic).ScanExpression() < new AlgEx(this.rightExpression, Owner, Enemy, Relic).ScanExpression())
             {
                 return true;
             }
@@ -351,14 +404,14 @@ namespace card_gameProtot
     {
         string leftExpression = "";
         string rightExpression = "";
-        public Greater_Than(string leftExpression, string rightExpression, Player Owner, Player Enemy) : base(leftExpression, Owner, Enemy)
+        public Greater_Than(string leftExpression, string rightExpression, Player Owner, Player Enemy, Relics relics) : base(leftExpression, Owner, Enemy, relics)
         {
             this.leftExpression = leftExpression;
             this.rightExpression = rightExpression;
         }
         public bool Evaluate()
         {
-            if (new AlgEx(this.leftExpression, Owner, Enemy).ScanExpression() > new AlgEx(this.rightExpression, Owner, Enemy).ScanExpression())
+            if (new AlgEx(this.leftExpression, Owner, Enemy, Relic).ScanExpression() > new AlgEx(this.rightExpression, Owner, Enemy, Relic).ScanExpression())
             {
                 return true;
             }
@@ -390,7 +443,6 @@ namespace card_gameProtot
                         case "Graveyard":
                             return AddForType(condition.Substring(i + 1, condition.Length - (i + 1)), Game.GraveYard);
                         case "Hand":
-                            Console.WriteLine(player.hand.Count());
                             return AddForType(condition.Substring(i + 1, condition.Length - (i + 1)), player.hand);
                         case "Deck":
                             return AddForType(condition.Substring(i + 1, condition.Length - (i + 1)), Program.CardsInventary);
