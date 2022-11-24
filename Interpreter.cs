@@ -438,8 +438,6 @@ namespace card_gameProtot
         }
         public List<Relics> AddForType(string condition, List<Relics> list)
         {
-            Console.WriteLine("condition: " + condition);
-
             for (int i = 0; i < condition.Length; i++)
             {
                 if (condition[i] == '.')
@@ -567,6 +565,20 @@ namespace card_gameProtot
                 case "ChangeState":
                     new ChangeState(this.Action.Replace(NextWord(Action) + ".", ""), this.card, this.Affected, this.NotAffected);
                     break;
+                case "Show":
+                    new Show(this.Action.Replace(NextWord(Action) + ".", ""), this.card, this.Affected, this.NotAffected).Effect();
+                    break;
+            }
+        }
+        public void CutExpression()
+        {
+            if(this.Action.Contains("."))
+            {
+                this.Action = this.Action.Substring(this.Action.IndexOf("."), (this.Action.Length - this.Action.IndexOf(".")));
+            }
+            else
+            {
+                this.Action = "";
             }
         }
         public string NextWord(string expression)
@@ -733,7 +745,7 @@ namespace card_gameProtot
                                     if (card.id == cardId)
                                     {
                                         this.card.Owner.hand.Add(new Relics(this.card.Owner, this.card.Enemy, card.id, card.name, card.passiveDuration, card.activeDuration,
-                                                card.imgAddress, card.isTrap, card.condition, card.type, card.effect));
+                                                card.imgAddress, card.isTrap, card.type, card.effect));
                                         break;
                                     }
                                 }
@@ -765,7 +777,7 @@ namespace card_gameProtot
                                     if (card.id == cardId)
                                     {
                                         this.card.Owner.hand.Add(new Relics(Affected, this.card.Enemy, card.id, card.name, card.passiveDuration, card.activeDuration,
-                                                        card.imgAddress, card.isTrap, card.condition, card.type, card.effect));
+                                                        card.imgAddress, card.isTrap, card.type, card.effect));
                                         break;
                                     }
                                 }
@@ -787,7 +799,7 @@ namespace card_gameProtot
                                     if (cards.id == card.id)
                                     {
                                         Affected.hand.Add(new Relics(Affected, this.card.Enemy, cards.id, cards.name, cards.passiveDuration, cards.activeDuration,
-                                                cards.imgAddress, cards.isTrap, cards.condition, cards.type, cards.effect));
+                                                cards.imgAddress, cards.isTrap, cards.type, cards.effect));
                                         break;
                                     }
                                 }
@@ -810,7 +822,7 @@ namespace card_gameProtot
                                 if (card.id == random)
                                 {
                                     this.card.Owner.hand.Add(new Relics(Affected, this.card.Enemy, card.id, card.name, card.passiveDuration, card.activeDuration,
-                                                    card.imgAddress, card.isTrap, card.condition, card.type, card.effect));
+                                                    card.imgAddress, card.isTrap, card.type, card.effect));
                                     break;
                                 }
                             }
@@ -826,7 +838,7 @@ namespace card_gameProtot
                                 if (card.id == cardInventary.id)
                                 {
                                     Affected.hand.Add(new Relics(Affected, this.card.Enemy, cardInventary.id, cardInventary.name, cardInventary.passiveDuration, cardInventary.activeDuration,
-                                            cardInventary.imgAddress, cardInventary.isTrap, cardInventary.condition, cardInventary.type, cardInventary.effect));
+                                            cardInventary.imgAddress, cardInventary.isTrap, cardInventary.type, cardInventary.effect));
                                     break;
                                 }
                             }
@@ -974,6 +986,54 @@ namespace card_gameProtot
                     }
                 }
             }
+        }
+    }
+    class Show : InterpretAction
+    {
+        int cards;
+        public Show(string action, Relics card, Player Affected, Player NotAffected) : base(action, card, Affected, NotAffected){}
+        public void Effect()
+        {
+            string count = NextWord(this.Action);
+            List<Relics> show = new List<Relics>();
+            if(IsDigit(count))
+            {
+                cards = int.Parse(count);
+                Console.Clear();
+                Console.WriteLine("El enemygo cuenta con " + Affected.hand.Count() + " cartas en su mano, cuales desea ver?");
+                for (int i = 0; i < cards; i++)
+                {
+                    try
+                    {
+                        show.Add(Affected.hand.ElementAt(int.Parse(Console.ReadLine())));
+                    }
+                    catch(System.Exception)
+                    {
+                        break;
+                    }
+                    
+                }
+                foreach (var card in show)
+                {
+                    Console.WriteLine(card.name);
+                }
+            }
+            else if(count == "all")
+            {
+                Console.Clear();
+                cards = Affected.hand.Count();
+                foreach (var card in Affected.hand)
+                {
+                    show.Add(card);
+                    Console.WriteLine(card.name);
+                }
+            }
+            //Metodo que debe hacer Frank para visualizar las cartas
+            ShowCards(show);
+        }
+        public void ShowCards(List<Relics> show)
+        {
+
         }
     }
 }
