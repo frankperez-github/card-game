@@ -28,6 +28,7 @@ namespace card_gameProtot
             string[] expression = this.expressionA.Split('\n');
             Scan(expression, 0);
         }
+        //Metodo Recursivo
         public void Scan(string[] expression, int index)
         {
             if(index==expression.Length)
@@ -49,51 +50,32 @@ namespace card_gameProtot
                     for (int i = index+1; i < expression.Length; i++)
                     {
                         int key = 0;
-                        if(expression[i] == "{")
+                        if(expression[i].Contains("{"))
                         {
                             key++;
                         }
-                        else if(expression[i] == "}")
+                        else if(expression[i].Contains("}"))
                         {
                             key--;
                         }
                         if(key == 0)
                         {
-                            Console.WriteLine(expression[i]);
-                            expression[i].Replace("\n", "");
-                            Console.WriteLine(expression[i]);
-                            if(expression[i+1] == "else")
-                            {
-                                Scan(expression, i+2);
-                            }
-                            if(expression[i+1]  == "else if (")
+                            if(expression[i].Contains("else"))
                             {
                                 Scan(expression, i+1);
+                                break;
+                            }
+                            if(expression[i].Contains("else if ("))
+                            {
+                                expression[i] = expression[i].Replace("else ", "");
+                                Scan(expression, i);
+                                break;
                             }
                         }
                     }
                 }
             }
-            else if (expression[index] == "else")
-            {
-               for (int i = index+1; i < expression.Length; i++)
-                    {
-                        int key = 0;
-                        if(expression[i] == "{")
-                        {
-                            key++;
-                        }
-                        else if(expression[i] == "}")
-                        {
-                            key--;
-                        }
-                        if(key == 0)
-                        {
-                            Scan(expression, index+1);
-                        }
-                    } 
-            }
-            else if (expression[index] != "{" && expression[index] != "}")
+            else if (!expression[index].Contains("{") && !expression[index].Contains("}"))
             {
                 InterpretAction.InterpretExpression(expression[index], Relic);
                 Scan(expression, index+1);
@@ -670,13 +652,14 @@ namespace card_gameProtot
     }
     class Cure : InterpretAction
     {
-        int vida = 1;
-        int factor = 1;
+        int vida;
+        int factor;
         public Cure(string action, Relics Relic, Player Affected, Player NotAffected) : base(action, Relic, Affected, NotAffected)
         {
             this.vida = int.Parse(NextWord(this.Action));
+            this.factor = 1;
             this.Action = this.Action.Replace(NextWord(action) + ".", "");
-            if (this.Action != "")
+            if (this.Action.Contains("."))
             {
                 if (IsDigit(this.Action))
                 {
@@ -695,13 +678,14 @@ namespace card_gameProtot
     }
     class Attack : InterpretAction
     {
-        int damage = 1;
-        int factor = 1;
+        int damage;
+        int factor;
         public Attack(string action, Relics Relic, Player Affected, Player NotAffected) : base(action, Relic, Affected, NotAffected)
         {
             this.damage = int.Parse(NextWord(this.Action));
-            this.Action = this.Action.Replace(NextWord(action), "");
-            if (this.Action != "")
+            this.factor = 1;
+            this.Action = this.Action.Replace(NextWord(action) + ".", "");
+            if (this.Action.Contains("."))
             {
                 if (IsDigit(this.Action))
                 {
@@ -865,13 +849,14 @@ namespace card_gameProtot
     }
     class Defense : InterpretAction
     {
-        int defense = 1;
-        double factor = 1;
+        int defense;
+        double factor;
         public Defense(string action, Relics Relic, Player Affected, Player NotAffected) : base(action, Relic, Affected, NotAffected)
         {
             this.defense = int.Parse(NextWord(this.Action));
+            this.factor = 1;
             this.Action = this.Action.Replace(NextWord(action) + ".", "");
-            if (this.Action != "")
+            if (this.Action.Contains("."))
             {
                 if (IsDigit(NextWord(this.Action)))
                 {
