@@ -27,7 +27,7 @@
         public string effect{get;}
         public bool isTrap{get;}
         public string description{get;}
-        public List<InterpretAction> Actions;
+        public List<InterpretAction> Actions{get;}
         public CardState cardState = CardState.OnDeck;
 
         public Relics(Player Owner, Player Enemy, int id, string Name, int passiveDuration, int activeDuration, string imgAddress, bool isTrap, string type, string effect, string description)
@@ -45,7 +45,6 @@
         }
         public void Effect()
         {
-            AddtoBattleField();
             Scan(effect);
         }
         // public double setFactor(int effect, Player player, Player enemy)
@@ -74,18 +73,7 @@
         //     }
         //     return factor;
         // } 
-        public  void AddtoBattleField()
-        {
-            for (int i = 0; i < Owner.userBattleField.Length; i++)
-            {
-                if(Owner.userBattleField[i] == null)
-                {
-                    this.Owner.userBattleField[i] = this;
-                    this.Owner.hand.Remove(this);
-                    break;
-                }
-            }
-        }       
+              
         public void Scan(string effect)
         {
             string[] expression = effect.Split('\n');
@@ -212,6 +200,17 @@
                     this.Actions.Add(Show);
                     Show.Effect();
                     break;
+                case "StopAttack":
+                    StopAttack Stop = new StopAttack(expression, this, Affected, NotAffected, this.Owner, this.Enemy);
+                    this.Actions.Add(Stop);
+                    break;
+                case "DamageReduction":
+                    DamageReduction Reduction = new DamageReduction(Edit.CutExpression(expression), this, Affected, NotAffected, this.Owner, this.Enemy);
+                    this.Actions.Add(Reduction);
+                    break;
+                case "Reverse":
+
+                    break;
             }
         }
     }
@@ -328,11 +327,11 @@
             }
             return 0;
         }
-        public bool Trap()
+        public bool HaveTrap()
         {
             foreach (var card in hand)
             {
-                if(card.cardState == CardState.OnHand && card.isTrap)
+                if(card.isTrap)
                 {
                     return true;
                 }
@@ -352,27 +351,12 @@
     public enum State
     {
         Safe,
+        //Pierde 10 de vida en cada turno
         Poisoned,
+        //No puede atacar
         Freezed,
+        //No puede activar cartas
         Asleep,
-        NULL
-    }
-    public enum relativePlayer
-    {
-        Owner,
-        Enemy,
-        NULL
-    }
-    public enum Property
-    {
-        State,
-        Life,
-        Defense,
-        Attack,
-        Hand,
-        BatteField,
-        GraveYard
-    }
-    
+    } 
     #endregion
 }

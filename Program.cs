@@ -58,7 +58,18 @@ namespace card_gameProtot
             // Muestra 2 cartas de la mano del enemigo
             CardsInventary.Add(new Relics(defaultPlayer, defaultPlayer, 10, "El ojo negro", 0, 2, "imgpath4", false, "show", "(Enemy.Show.2)", "Muestra 2 cartas de la mano del enemigo"));
 
-            
+            // Penitencia
+            // Trampa, Evita el ataque del enemigo
+            CardsInventary.Add(new Relics(defaultPlayer, defaultPlayer, 11, "Penitencia", 0, 1, "imgpath", true, "trap", "(Owner.StopAttack)", "Detiene completamente el ataque del enemigo"));
+
+            // Fuga de Daño
+            // Trampa, Reduce en un 50 por ciento el ataque del enemigo durante el ataque
+            CardsInventary.Add(new Relics(defaultPlayer, defaultPlayer, 12, "Fuga de Daño", 0, 1, "imgpath", true, "trap", "(Owner.DamageReduction.50)", "Reduce el ataque del enemigo en un 50 por ciento durante el ataque")); 
+
+            // Reverse
+            // Revierte cualquier efecto
+            CardsInventary.Add(new Relics(defaultPlayer, defaultPlayer, 13, "Reverse", 0, 1, "imgpath", true, "trap", "(Owner.Reverse)", "Revierte el efecto de una carta"));
+
             Game game = new Game(CharactersInventary, CardsInventary);
             game.game();
         }

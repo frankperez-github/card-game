@@ -113,11 +113,10 @@ namespace card_gameProtot
         {
             switch (expression)
             {
-                case "poisoned": return 2000;
-                case "freezed": return 2001;
-                case "asleep": return 2002;
-                case "null": return 2003;
-                case "safe": return 2004;
+                case "Poisoned": return 2000;
+                case "Freezed": return 2001;
+                case "Asleep": return 2002;
+                case "Safe": return 2003;
             }
             if (expression.Substring(0, expression.IndexOf('.')) == "Owner")
             {
@@ -143,8 +142,7 @@ namespace card_gameProtot
                         case State.Poisoned: return 2000;
                         case State.Freezed: return 2001;
                         case State.Asleep: return 2002;
-                        case State.NULL: return 2003;
-                        case State.Safe: return 2004;
+                        case State.Safe: return 2003;
                     }
                     break;
             }
@@ -847,6 +845,32 @@ namespace card_gameProtot
         public void ShowCards(List<Relics> show)
         {
 
+        }
+    }
+    class StopAttack : InterpretAction
+    {
+        public StopAttack(string action, Relics card, Player Affected, Player NotAffected, Player Owner, Player Enemy) : base(action, card, Affected, NotAffected, Owner, Enemy)
+        {
+            //no hay nada xd
+        }
+    }
+    class DamageReduction : InterpretAction
+    {
+        int ReductionFactor;
+        public DamageReduction(string action, Relics card, Player Affected, Player NotAffected, Player Owner, Player Enemy) : base(action, card, Affected, NotAffected, Owner, Enemy)
+        {
+            //Aqui debe haber un numero que represente el por ciento de reduccion de daño
+            this.ReductionFactor = int.Parse(NextWord(this.expressionA));
+        }
+        public override void Effect()
+        {
+            Affected.life -=  (double)((Affected.Enemy.character.attack * (((double)ReductionFactor)/100)));
+        }
+    }
+    class Reverse : InterpretAction
+    {
+        public Reverse(string action, Relics card, Player Affected, Player NotAffected, Player Owner, Player Enemy) : base(action, card, Affected, NotAffected, Owner, Enemy)
+        {
         }
     }
 }

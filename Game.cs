@@ -8,6 +8,7 @@ namespace card_gameProtot
         public List<Relics> CardsInventary;
         public List<Relics> GraveYard;
         int turn;
+
         public Game(List<Character> CharactersInventary, List<Relics> CardsInventary)
         {
             this.CharactersInventary = CharactersInventary;
@@ -34,77 +35,90 @@ namespace card_gameProtot
             Console.Clear();
             while (player1.life > 0 && player2.life > 0)
             {
-                Console.WriteLine("Turn: "+turn);
-                
-
                 if (turn % 2 != 0) //Impar
                 {
-                    player1.TakeFromDeck(1);                    
-                    
-                    //All activity of player 1 goes here 
-                    int Option = 0;
-                    while(Option != 3)
-                    {
-                        Console.Clear();
-                        player1.printInfo();
-                        Console.WriteLine("Presione 1: Para activar cartas");
-                        Console.WriteLine("Presione 2: Para atacar");
-                        Console.WriteLine("Presione 3: Para Pasar turno");
-                        try
-                        {
-                            Option = int.Parse(Console.ReadLine());
-                        }
-                        catch (System.Exception){}
-                        switch (Option)
-                        {
-                            case 1: ActivateCards(player1);
-                            break;
-                            case 2: Attack(player1, player2);
-                            break;
-                            default:
-                            break;
-                        }
-                    }
-                    UpdateBattleField(player1);
-                    Console.Clear();
+                    PlayGame(player1);
                 }
 
                 if (turn % 2 == 0) //Par
                 {
-                    player2.TakeFromDeck(1);
-                    player2.printInfo();
-
-                    //All activity of player 2 goes here 
-                    int Option = 0;
-                    while(Option != 3)
-                    {
-                        Console.Clear();
-                        player2.printInfo();
-                        Console.WriteLine("Presione 1: Para activar cartas");
-                        Console.WriteLine("Presione 2: Para atacar");
-                        Console.WriteLine("Presione 3: Para Pasar turno");
-                        try
-                        {
-                            Option = int.Parse(Console.ReadLine());
-                        }
-                        catch (System.Exception){}
-                        switch (Option)
-                        {
-                            case 1: ActivateCards(player2);
-                            break;
-                            case 2: Attack(player2, player1);
-                            break;
-                            default:
-                            break;
-                        }
-                    }
-                    UpdateBattleField(player2);
-                    Console.Clear();
+                    PlayGame(player2);
                 }
-                turn++; 
+                turn++;
             }
         }
-        //We need to change enemy player state
+        public void PlayGame(Player player)
+        {
+            if(player.state == State.Poisoned)
+            {
+                player.life -= 10;
+            }
+            
+            player.TakeFromDeck(1);
+            //All activity of player 1 goes here 
+            int Option = 0;
+            while(Option != 3)
+            {
+                Console.Clear();
+                player.printInfo();
+                if(player.state == State.Freezed)
+                {
+                    Console.WriteLine("Presione 1: Para atacar");
+                    Console.WriteLine("Presione 3: Para Pasar turno");
+                    try
+                    {
+                        Option = int.Parse(Console.ReadLine());
+                    }
+                    catch (System.Exception){}
+                    switch (Option)
+                    {
+                        case 1: Attack(player);
+                        break;
+                        default:
+                        break;
+                    }
+                }
+                else if(player.state == State.Asleep)
+                {
+                    Console.WriteLine("Presione 1: Para activar cartas");
+                    Console.WriteLine("Presione 3: Para Pasar turno");
+                    try
+                    {
+                        Option = int.Parse(Console.ReadLine());
+                    }
+                    catch (System.Exception){}
+                    switch (Option)
+                    {
+                        case 1: ActivateCards(player);
+                        break;
+                        default:
+                        break;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Presione 1: Para activar cartas");
+                    Console.WriteLine("Presione 2: Para atacar");
+                    Console.WriteLine("Presione 3: Para Pasar turno");
+                    try
+                    {
+                        Option = int.Parse(Console.ReadLine());
+                    }
+                    catch (System.Exception){}
+                    switch (Option)
+                    {
+                        case 1: ActivateCards(player);
+                        break;
+                        case 2: Attack(player);
+                        break;
+                        default:
+                        break;
+                    }
+                }
+            }
+            UpdateBattleField(player);
+            Console.Clear();
+        }
         public void UpdateBattleField(Player player)
         {
             for (int index = 0; index < player.userBattleField.Length; index++)
@@ -118,6 +132,10 @@ namespace card_gameProtot
                             if(Action.GetType().ToString() == "card_gameProtot.Attack")
                             {
                                 Action.Effect();
+                            }
+                            else if(Action.GetType().ToString() == "card_gameProtot.ChangeState")
+                            {
+                                player.Enemy.state = State.Safe;
                             }
                         }
                         GraveYard.Add(player.userBattleField[index]); 
@@ -139,73 +157,89 @@ namespace card_gameProtot
                 }
             }
         }
-        public static void ActivateCards(Player player)
+        public void ActivateCards(Player player)
         {
             do
             {
                 Console.Clear();
                 player.printInfo();
                 Console.WriteLine("Elige la carta que quieres activar");
-                ActivateEffect(player, int.Parse(Console.ReadLine()));
+                if(player.Enemy.HaveTrap())
+                {
+
+                }
+                AddtoBattleField(player.hand[int.Parse(Console.ReadLine())]);
+                player.hand[int.Parse(Console.ReadLine())].Effect();
                 Console.WriteLine("Si quiere activar otra carta presione: 1, si no presione 2");
             } while (int.Parse(Console.ReadLine()) != 2);
         }
-        public static void ActivateTrapCards(Player player, double attack)
+        public  void AddtoBattleField(Relics relic)
+        {
+            for (int i = 0; i < relic.Owner.userBattleField.Length; i++)
+            {
+                if(relic.Owner.userBattleField[i] == null)
+                {
+                    relic.Owner.userBattleField[i] = relic;
+                    relic.Owner.hand.Remove(relic);
+                    break;
+                }
+            }
+        } 
+        public static void ActivateTrapCards(Player enemy, double attack)
         {
             do
             {
                 Console.Clear();
-                player.printInfo();
+                enemy.printInfo();
                 Console.WriteLine("Elige la carta que quieres activar");
                 int HandPosition = int.Parse(Console.ReadLine());
-                // foreach (var effect in player.hand[HandPosition].EffectsOrder)
-                // {
-                //     if (effect.Key == 4)
-                //     {
-                //         effect.Value.affects = attack*-1;
-                //     }
-                // }
-                player.hand[HandPosition].Effect();
-                player.userBattleField.ToList().Add(player.hand[HandPosition]);
-                player.hand[HandPosition].cardState = CardState.Activated;
-                player.hand.Remove(player.hand[HandPosition]);                            
+                Relics relic = enemy.hand.ElementAt(HandPosition);
+                relic.Effect();
+                if(relic.Actions.Count() != 0)
+                {
+                    foreach (var Action in relic.Actions)
+                    {
+                        if(Action.GetType().ToString() == "card_gameProtot.StopAttack")
+                        {
+                            return;
+                        }
+                        if(Action.GetType().ToString() == "card_gameProtot.DamageReduction")
+                        {
+                            Action.Effect();
+                            return;
+                        }
+                    }
+                }
                 Console.WriteLine("Si quiere activar otra carta presione: 1, si no presione 2");
             } while (int.Parse(Console.ReadLine()) != 2);
-            
-            
+            enemy.life = enemy.life - enemy.Enemy.character.attack;
         }
-        public static void ActivateEffect(Player player, int HandPossition)
+        public static void Attack(Player player)
         {
-            player.hand[HandPossition].Effect();    
-        }
-        public static void Attack(Player player, Player enemy)
-        {
-            if(enemy.character.defense!=0)
+            if(player.Enemy.character.defense!=0)
             {
                 Console.WriteLine("Desea defenderse de este ataques? 1: Si, 2: No");
                 if(int.Parse(Console.ReadLine())==1)
                 {
-                    enemy.character.defense--;
+                    player.Enemy.character.defense--;
                 }
                 else
                 {
-                    enemy.life = enemy.life - player.character.attack;
+                    player.Enemy.life = player.Enemy.life - player.character.attack;
                 }
             }
-            else if(enemy.Trap())
+            else if(player.Enemy.HaveTrap())
             {
                 Console.WriteLine("Desea activar una carta trampa? 1: Si, 2: No");
                 if(int.Parse(Console.ReadLine())==1)
                 {
-                    ActivateTrapCards(enemy, player.character.attack);
+                    ActivateTrapCards(player.Enemy, player.character.attack);
                 }
                 else
                 {
-                    enemy.life = enemy.life - player.character.attack;
+                    player.Enemy.life = player.Enemy.life - player.character.attack;
                 }
             }
-            
-            
         }
     }
 }
